@@ -8,6 +8,21 @@ var points = [];
 var colors = [];
 var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
+var theta = (Math.PI/4.0);
+var phi = 0.0;
+
+var radius =1000.0;
+xAt=radius*Math.sin(theta)*Math.cos(phi);
+yAt=radius*Math.sin(theta)*Math.sin(phi);
+zAt=radius*Math.cos(theta);
+
+
+
+var xEye = 0.0;
+var yEye = 0.0;
+var zEye = 0.0;
+
+
 var matrixLoc;
 
 window.onload = function init() {
@@ -50,6 +65,42 @@ window.onload = function init() {
     pLoc = gl.getUniformLocation( program, "projection" );
     proj = perspective( 50.0, 1.0, 1.0, 500.0 );
     gl.uniformMatrix4fv(pLoc, false, flatten(proj));
+
+
+    // smooth eventlistener
+    var keyState = {};
+    window.addEventListener('keydown',function(e){
+        keyState[e.keyCode || e.which] = true;
+    },true);
+    window.addEventListener('keyup',function(e){
+        keyState[e.keyCode || e.which] = false;
+    },true);
+
+    function gameLoop() {
+        if (keyState[37]){
+            phi+=(Math.PI/180.0);
+        }
+        if (keyState[39]){
+            phi-=(Math.PI/180.0);
+        }
+        if (keyState[38]){
+            theta-=(Math.PI/180.0);
+        }
+        if (keyState[40]){
+            theta+=(Math.PI/180.0);
+        }
+
+        // redraw/reposition your object here
+        // also redraw/animate any objects not controlled by the user
+
+        xAt=radius*Math.sin(theta)*Math.cos(phi);
+        yAt=radius*Math.sin(theta)*Math.sin(phi);
+        zAt=radius*Math.cos(theta);
+
+        setTimeout(gameLoop, 10);
+    }
+    gameLoop();
+
 
     render();
 }
@@ -124,7 +175,7 @@ function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var mv = mat4();
-	  mv = lookAt( vec3(250.0, -100.0, 50.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0) );
+	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
 
 	  drawScenery( mv );
 
