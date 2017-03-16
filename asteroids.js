@@ -165,14 +165,6 @@ function render()
     ctm = mult( ctm, rotateY(spinY) );
     ctm = mult( ctm, scalem( scaleXYZ, scaleXYZ, scaleXYZ) );
 
-    /*var ctm1 = mat4();
-    ctm1 = mult( ctm1, rotateX(spinX) );
-    ctm1 = mult( ctm1, rotateY(spinY) );*/
-
-    // teikna "sólina"
-    /*ctm = mult( ctm, scalem( 0.3, 0.3, 0.3 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );*/
 
 
 
@@ -182,33 +174,6 @@ function render()
     gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
     gl.drawArrays( gl.TRIANGLES, 0, numVertices );
 
-    // teikna "jörðina"
-    /*ctm = mult( ctm, rotateY( rotYear ) );
-    ctm = mult( ctm, translate( 2.0, 0.0, 0.0 ) );
-    ctm = mult( ctm, rotateZ( earthTilt ) );
-    ctm = mult( ctm, rotateY( rotDay ) );
-
-    ctm = mult( ctm, scalem( 0.2, 0.2, 0.2 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );*/
-
-    // teikna tungl 1
-    /*ctm1 = mult( ctm, rotateY( rotMonth ) );
-    ctm1 = mult( ctm1, translate( 2.0, 0.0, 0.0 ) );
-
-    ctm1 = mult( ctm1, scalem( 0.5, 0.5, 0.5 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm1));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );*/
-
-    // teikna tungl 2
-
-    /*ctm2 = mult( ctm, rotateY( rotMonth2 ) );
-    ctm2 = mult( ctm2, rotateZ( earthTilt ) );
-    ctm2 = mult( ctm2, translate( 3.0, 0.0, 0.0 ) );
-    ctm2 = mult( ctm2, scalem( 0.5, 0.5, 0.5 ) );
-    ctm2 = mult( ctm2, rotateY( rotDay ));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm2));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );*/
 
     requestAnimFrame( render );
 }
