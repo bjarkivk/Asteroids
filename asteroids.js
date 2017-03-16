@@ -1,13 +1,4 @@
-/////////////////////////////////////////////////////////////////
-//    Sýnidæmi í Tölvugrafík
-//     Jörðin (sem teningur!) snýst um sólina (stærri teningur!)
-//
-//    Hjálmtýr Hafsteinsson, febrúar 2017
-/////////////////////////////////////////////////////////////////
 
-
-//a
-//c
 var canvas;
 var gl;
 
@@ -16,21 +7,7 @@ var numVertices  = 36;
 var points = [];
 var colors = [];
 
-var movement = false;     // Do we rotate?
-var spinX = 0;
-var spinY = 0;
-var scaleXYZ = 1.0
-var origX;
-var origY;
-
-var rotYear = 0.0;
-var rotDay = 0.0;
-var rotMonth = 0.0;
-var rotMonth2 = 0.0;
-var earthTilt = 23.5;
-
 var matrixLoc;
-
 
 window.onload = function init()
 {
@@ -42,7 +19,7 @@ window.onload = function init()
     colorCube();
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.9, 1.0, 1.0, 1.0 );
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -69,35 +46,6 @@ window.onload = function init()
     gl.enableVertexAttribArray( vPosition );
 
     matrixLoc = gl.getUniformLocation( program, "rotation" );
-
-    //event listeners for mouse
-    canvas.addEventListener("mousedown", function(e){
-        movement = true;
-        origX = e.offsetX;
-        origY = e.offsetY;
-        e.preventDefault();         // Disable drag and drop
-    } );
-
-    canvas.addEventListener("mouseup", function(e){
-        movement = false;
-    } );
-
-    canvas.addEventListener("mousemove", function(e){
-        if(movement) {
-    	    spinY = ( spinY + (e.offsetX - origX) ) % 360;
-            spinX = ( spinX + (e.offsetY - origY) ) % 360;
-            origX = e.offsetX;
-            origY = e.offsetY;
-        }
-    } );
-
-    window.addEventListener("wheel", function(e){
-        if( e.wheelDelta > 0.0 ) {
-            scaleXYZ = 1.1*scaleXYZ;
-        } else {
-            scaleXYZ = 0.9*scaleXYZ;
-        }
-    }  );
 
     render();
 }
@@ -156,22 +104,7 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    rotDay += 3.0;
-    rotYear += 0.1;        // not the correct value, but looks better!
-    rotMonth += 1.0;
-    rotMonth2 += 1.2;
-
-
-    ctm = lookAt(vec3(0.0,0.0,0.0),vec3(0.0,1.0,0.0),vec3(0.0,0.0,1.0));
-
-    var ctm = mat4();
-    ctm = mult( ctm, rotateX(spinX) );
-    ctm = mult( ctm, rotateY(spinY) );
-    ctm = mult( ctm, scalem( scaleXYZ, scaleXYZ, scaleXYZ) );
-
-
-
-
+    ctm = lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0),vec3(0.0, 0.0, 1.0));
 
     //teikna heiminn
     ctm = mult( ctm, scalem( 1.0, 1.0, 1.0 ) );
