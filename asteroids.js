@@ -15,6 +15,7 @@ var colors = [];
 var movement = false;     // Do we rotate?
 var spinX = 0;
 var spinY = 0;
+var scaleXYZ = 1.0
 var origX;
 var origY;
 
@@ -86,6 +87,14 @@ window.onload = function init()
         }
     } );
 
+    window.addEventListener("wheel", function(e){
+        if( e.wheelDelta > 0.0 ) {
+            scaleXYZ = 1.1*scaleXYZ;
+        } else {
+            scaleXYZ = 0.9*scaleXYZ;
+        }
+    }  );
+
     render();
 }
 
@@ -148,16 +157,28 @@ function render()
     rotMonth += 1.0;
     rotMonth2 += 1.2;
 
+
+    ctm = lookAt(vec3(0.0,0.0,0.0),vec3(0.0,0.0,-1.0),vec3(0.0,1.0,0.0));
+
     var ctm = mat4();
     ctm = mult( ctm, rotateX(spinX) );
     ctm = mult( ctm, rotateY(spinY) );
+    ctm = mult( ctm, scalem( scaleXYZ, scaleXYZ, scaleXYZ) );
 
-    var ctm1 = mat4();
+    /*var ctm1 = mat4();
     ctm1 = mult( ctm1, rotateX(spinX) );
-    ctm1 = mult( ctm1, rotateY(spinY) );
+    ctm1 = mult( ctm1, rotateY(spinY) );*/
 
     // teikna "sólina"
-    ctm = mult( ctm, scalem( 0.3, 0.3, 0.3 ) );
+    /*ctm = mult( ctm, scalem( 0.3, 0.3, 0.3 ) );
+    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
+    gl.drawArrays( gl.TRIANGLES, 0, numVertices );*/
+
+
+
+
+    //teikna heiminn
+    ctm = mult( ctm, scalem( 1.0, 1.0, 1.0 ) );
     gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
     gl.drawArrays( gl.TRIANGLES, 0, numVertices );
 
