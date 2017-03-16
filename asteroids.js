@@ -7,6 +7,7 @@
 
 
 //a
+//c
 var canvas;
 var gl;
 
