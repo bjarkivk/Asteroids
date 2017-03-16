@@ -4,14 +4,15 @@
 
 attribute  vec4 vPosition;
 attribute  vec4 vColor;
+
+uniform mat4 projection;
+uniform mat4 modelview;
+
 varying vec4 fColor;
 
-uniform mat4 rotation;
-
-void main()
-{
+void main() {
     fColor = vColor;
-    gl_Position = rotation * vPosition;
+    gl_Position = projection * modelview * vPosition;
 }
 </script>
 
@@ -21,9 +22,7 @@ precision mediump float;
 
 varying vec4 fColor;
 
-void
-main()
-{
+void main() {
     gl_FragColor = fColor;
 }
 </script>

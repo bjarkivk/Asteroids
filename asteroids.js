@@ -6,11 +6,11 @@ var numVertices  = 36;
 
 var points = [];
 var colors = [];
+var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
 var matrixLoc;
 
-window.onload = function init()
-{
+window.onload = function init() {
     canvas = document.getElementById( "gl-canvas" );
 
     gl = WebGLUtils.setupWebGL( canvas );
@@ -23,9 +23,6 @@ window.onload = function init()
 
     gl.enable(gl.DEPTH_TEST);
 
-    //
-    //  Load shaders and initialize attribute buffers
-    //
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
@@ -37,21 +34,27 @@ window.onload = function init()
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
 
-    var vBuffer = gl.createBuffer();
+    vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-    matrixLoc = gl.getUniformLocation( program, "rotation" );
+    colorLoc = gl.getUniformLocation( program, "vColor" );
+
+    mvLoc = gl.getUniformLocation( program, "modelview" );
+
+    // set projection
+    pLoc = gl.getUniformLocation( program, "projection" );
+    proj = perspective( 50.0, 1.0, 1.0, 500.0 );
+    gl.uniformMatrix4fv(pLoc, false, flatten(proj));
 
     render();
 }
 
-function colorCube()
-{
+function colorCube() {
     quad( 1, 0, 3, 2 );
     quad( 2, 3, 7, 6 );
     quad( 3, 0, 4, 7 );
@@ -60,8 +63,7 @@ function colorCube()
     quad( 5, 4, 0, 1 );
 }
 
-function quad(a, b, c, d)
-{
+function quad(a, b, c, d) {
     var vertices = [
         vec3( -0.5, -0.5,  0.5 ),
         vec3( -0.5,  0.5,  0.5 ),
@@ -84,33 +86,47 @@ function quad(a, b, c, d)
         [ 1.0, 1.0, 1.0, 1.0 ]   // white
     ];
 
-    // We need to parition the quad into two triangles in order for
-    // WebGL to be able to render it.  In this case, we create two
-    // triangles from the quad indices
-
-    //vertex color assigned by the index of the vertex
-
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
         points.push( vertices[indices[i]] );
         colors.push(vertexColors[indices[i]]);
-
     }
 }
 
+// draw a house in location (x, y) of size size
+function house( x, y, size, mv ) {
 
-function render()
-{
+  mv = mult( mv, translate( x, y, size/2 ) );
+  mv = mult( mv, scalem( size, size, size ) );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+  gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
+
+   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
+   gl.drawArrays( gl.TRIANGLES, 0, numVertices );
+
+}
+
+function drawScenery( mv ) {
+    // draw houses
+    house(-20.0, 50.0, 5.0, mv);
+    house(0.0, 70.0, 10.0, mv);
+    house(20.0, -10.0, 8.0, mv);
+    house(40.0, 120.0, 10.0, mv);
+    house(-30.0, -50.0, 7.0, mv);
+    house(10.0, -60.0, 10.0, mv);
+    house(-20.0, 75.0, 8.0, mv);
+    house(-40.0, 140.0, 10.0, mv);
+}
+
+function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    ctm = lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0),vec3(0.0, 0.0, 1.0));
+    var mv = mat4();
+	  mv = lookAt( vec3(250.0, -100.0, 50.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0) );
 
-    //teikna heiminn
-    ctm = mult( ctm, scalem( 1.0, 1.0, 1.0 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(ctm));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-
+	  drawScenery( mv );
 
     requestAnimFrame( render );
 }
