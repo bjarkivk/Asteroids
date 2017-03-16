@@ -10,7 +10,7 @@ var colors = [];
 var texture;
 var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
-var theta = (Math.PI/4.0);
+var theta = (Math.PI/2.0);
 var phi = 0.0;
 
 var radius =1000000.0;
@@ -87,10 +87,10 @@ window.onload = function init() {
         phi -= (Math.PI/180.0);
       }
       if (keyState[38]){
-        theta -= (Math.PI/180.0);
+        if(theta-(Math.PI/180.0) > (Math.PI/4.0)) theta -= (Math.PI/180.0);
       }
       if (keyState[40]){
-        theta += (Math.PI/180.0);
+        if(theta+(Math.PI/180.0) < 3.0*(Math.PI/4.0)) theta += (Math.PI/180.0);
       }
       if (keyState[17]) {
         if(velocity < maxspeed)
