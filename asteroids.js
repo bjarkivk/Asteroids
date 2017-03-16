@@ -11,17 +11,18 @@ var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 var theta = (Math.PI/4.0);
 var phi = 0.0;
 
-var radius =1000.0;
+var radius =1000000.0;
 xAt=radius*Math.sin(theta)*Math.cos(phi);
 yAt=radius*Math.sin(theta)*Math.sin(phi);
 zAt=radius*Math.cos(theta);
 
-
-
 var xEye = 0.0;
 var yEye = 0.0;
 var zEye = 0.0;
-
+var keyState = {};
+var velocity = 0,
+    maxspeed = 2, // max speed
+    friction = 0.98; // friction
 
 var matrixLoc;
 
@@ -30,7 +31,11 @@ window.onload = function init() {
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
-
+/*
+    var image = new Image();
+    image.onload = function() { configureTexture( image ); }
+    image.src = "stars.jpg";
+*/
     colorCube();
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -68,42 +73,48 @@ window.onload = function init() {
 
 
     // smooth eventlistener
-    var keyState = {};
-    window.addEventListener('keydown',function(e){
-        keyState[e.keyCode || e.which] = true;
-    },true);
-    window.addEventListener('keyup',function(e){
-        keyState[e.keyCode || e.which] = false;
-    },true);
+    window.addEventListener('keydown',function(e) {
+      keyState[e.keyCode || e.which] = true;
+    }, true);
+    window.addEventListener('keyup',function(e) {
+      keyState[e.keyCode || e.which] = false;
+    }, true);
+
 
     function gameLoop() {
-        if (keyState[37]){
-            phi+=(Math.PI/180.0);
-        }
-        if (keyState[39]){
-            phi-=(Math.PI/180.0);
-        }
-        if (keyState[38]){
-            theta-=(Math.PI/180.0);
-        }
-        if (keyState[40]){
-            theta+=(Math.PI/180.0);
-        }
 
-        // redraw/reposition your object here
-        // also redraw/animate any objects not controlled by the user
-
-        xAt=radius*Math.sin(theta)*Math.cos(phi);
-        yAt=radius*Math.sin(theta)*Math.sin(phi);
-        zAt=radius*Math.cos(theta);
-
-        setTimeout(gameLoop, 10);
+      if (keyState[37]){
+        phi += (Math.PI/180.0);
+      }
+      if (keyState[39]){
+        phi -= (Math.PI/180.0);
+      }
+      if (keyState[38]){
+        theta -= (Math.PI/180.0);
+      }
+      if (keyState[40]){
+        theta += (Math.PI/180.0);
+      }
+      if (keyState[17]) {
+        if(velocity < maxspeed)
+          velocity += 0.01;
+      } else {
+        velocity *= friction;
+      }
+      var v = velocity/radius;
+      xEye += v*xAt;
+      yEye += v*yAt;
+      zEye += v*zAt;
+      xAt=radius*Math.sin(theta)*Math.cos(phi);
+      yAt=radius*Math.sin(theta)*Math.sin(phi);
+      zAt=radius*Math.cos(theta);
+      setTimeout(gameLoop, 10);
     }
     gameLoop();
-
-
     render();
 }
+
+
 
 function colorCube() {
     quad( 1, 0, 3, 2 );
