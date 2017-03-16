@@ -7,14 +7,13 @@ attribute  vec4 vColor;
 
 uniform mat4 projection;
 uniform mat4 modelview;
-attribute  vec2 vTexCoord;
-
-varying vec2 fTexCoord;
+//attribute  vec2 vTexCoord;
+//varying vec2 fTexCoord;
 varying vec4 fColor;
 
 void main() {
     fColor = vColor;
-    fTexCoord = vTexCoord;
+    //fTexCoord = vTexCoord;
     gl_Position = projection * modelview * vPosition;
 }
 </script>
@@ -22,13 +21,13 @@ void main() {
 <script id="fragment-shader" type="x-shader/x-fragment">
 
 precision mediump float;
-varying vec2 fTexCoord;
-
-uniform sampler2D texture;
+//varying vec2 fTexCoord;
+//uniform sampler2D texture;
 varying vec4 fColor;
 
 void main() {
-    gl_FragColor = texture2D( texture, fTexCoord );
+    //gl_FragColor = texture2D( texture, fTexCoord );
+    gl_FragColor = fColor;
 }
 </script>
 
@@ -43,6 +42,7 @@ Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
 <img id = "texImage" src = "stars.jpg" hidden></img>
 <br/>
+<p id = "coordinates"></p>
 
 </body>
 </html>

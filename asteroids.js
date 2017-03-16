@@ -27,7 +27,7 @@ var velocity = 0,
     friction = 0.98; // friction
 
 var matrixLoc;
-
+/*
 function configureTexture( image ) {
     texture = gl.createTexture();
     gl.bindTexture( gl.TEXTURE_2D, texture );
@@ -36,7 +36,7 @@ function configureTexture( image ) {
     gl.generateMipmap( gl.TEXTURE_2D );
     gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
     gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-}
+}*/
 
 window.onload = function init() {
     canvas = document.getElementById( "gl-canvas" );
@@ -99,9 +99,10 @@ window.onload = function init() {
         velocity *= friction;
       }
       var v = velocity/radius;
-      xEye += v*xAt;
-      yEye += v*yAt;
-      zEye += v*zAt;
+      var limit = 100;
+      if(xEye + v*xAt < limit && xEye + v*xAt > -limit) xEye += v*xAt;
+      if(yEye + v*yAt < limit && yEye + v*yAt > -limit) yEye += v*yAt;
+      if(zEye + v*zAt < limit && zEye + v*zAt > -limit) zEye += v*zAt;
       xAt=radius*Math.sin(theta)*Math.cos(phi);
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
@@ -117,11 +118,11 @@ window.onload = function init() {
     pLoc = gl.getUniformLocation( program, "projection" );
     proj = perspective( 50.0, 1.0, 1.0, 500.0 );
     gl.uniformMatrix4fv(pLoc, false, flatten(proj));
-
+/*
     var image = document.getElementById("texImage");
     configureTexture( image );
 
-    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
+    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);*/
     render();
 }
 
@@ -135,15 +136,16 @@ function envCube() {
 }
 
 function envQuad(a, b, c, d) {
+      var size = 2;
       var vertices = [
-        vec3( -1000, -1000,  1000 ),
-        vec3( -1000,  1000,  1000 ),
-        vec3(  1000,  1000,  1000 ),
-        vec3(  1000, -1000,  1000 ),
-        vec3( -1000, -1000, -1000 ),
-        vec3( -1000,  1000, -1000 ),
-        vec3(  1000,  1000, -1000 ),
-        vec3(  1000, -1000, -1000 )
+        vec3( -size, -size,  size ),
+        vec3( -size,  size,  size ),
+        vec3(  size,  size,  size ),
+        vec3(  size, -size,  size ),
+        vec3( -size, -size, -size ),
+        vec3( -size,  size, -size ),
+        vec3(  size,  size, -size ),
+        vec3(  size, -size, -size )
     ];
 
     var texCo = [
@@ -154,11 +156,12 @@ function envQuad(a, b, c, d) {
     ];
 
     var indices = [ a, b, c, a, c, d ];
-    var texind  = [ 1, 0, 3, 1, 3, 2 ];
+    //var texind  = [ 1, 0, 3, 1, 3, 2 ];
 
     for ( var i = 0; i < indices.length; ++i ) {
         points.push( vertices[indices[i]] );
-        texCoords.push( texCo[texind[i]] );
+        colors.push(vec4( 1.0, 1.0, 0.0, 1.0 ));
+        // texCoords.push( texCo[texind[i]] );
     }
 }
 
@@ -240,6 +243,7 @@ function render() {
 
     var mv = mat4();
 	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
+    document.getElementById("coordinates").innerHTML = "( " + Math.round(xEye,0) + ", " + Math.round(yEye,0) + ", " + Math.round(zEye,0) + ")";
 
 	  drawScenery( mv );
 
