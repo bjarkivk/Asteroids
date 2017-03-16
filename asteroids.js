@@ -158,7 +158,7 @@ function render()
     rotMonth2 += 1.2;
 
 
-    ctm = lookAt(vec3(0.0,0.0,0.0),vec3(0.0,0.0,-1.0),vec3(0.0,1.0,0.0));
+    ctm = lookAt(vec3(0.0,0.0,0.0),vec3(0.0,1.0,0.0),vec3(0.0,0.0,1.0));
 
     var ctm = mat4();
     ctm = mult( ctm, rotateX(spinX) );
