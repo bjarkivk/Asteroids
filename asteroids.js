@@ -5,7 +5,9 @@ var gl;
 var numVertices  = 36;
 
 var points = [];
+var texCoords = [];
 var colors = [];
+var texture;
 var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
 var theta = (Math.PI/4.0);
@@ -26,17 +28,24 @@ var velocity = 0,
 
 var matrixLoc;
 
+function configureTexture( image ) {
+    texture = gl.createTexture();
+    gl.bindTexture( gl.TEXTURE_2D, texture );
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
+    gl.generateMipmap( gl.TEXTURE_2D );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+}
+
 window.onload = function init() {
     canvas = document.getElementById( "gl-canvas" );
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
-/*
-    var image = new Image();
-    image.onload = function() { configureTexture( image ); }
-    image.src = "stars.jpg";
-*/
+
     colorCube();
+    envCube();
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
@@ -62,16 +71,6 @@ window.onload = function init() {
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-    colorLoc = gl.getUniformLocation( program, "vColor" );
-
-    mvLoc = gl.getUniformLocation( program, "modelview" );
-
-    // set projection
-    pLoc = gl.getUniformLocation( program, "projection" );
-    proj = perspective( 50.0, 1.0, 1.0, 500.0 );
-    gl.uniformMatrix4fv(pLoc, false, flatten(proj));
-
-
     // smooth eventlistener
     window.addEventListener('keydown',function(e) {
       keyState[e.keyCode || e.which] = true;
@@ -80,9 +79,7 @@ window.onload = function init() {
       keyState[e.keyCode || e.which] = false;
     }, true);
 
-
     function gameLoop() {
-
       if (keyState[37]){
         phi += (Math.PI/180.0);
       }
@@ -111,10 +108,59 @@ window.onload = function init() {
       setTimeout(gameLoop, 10);
     }
     gameLoop();
+
+    colorLoc = gl.getUniformLocation( program, "vColor" );
+
+    mvLoc = gl.getUniformLocation( program, "modelview" );
+
+    // set projection
+    pLoc = gl.getUniformLocation( program, "projection" );
+    proj = perspective( 50.0, 1.0, 1.0, 500.0 );
+    gl.uniformMatrix4fv(pLoc, false, flatten(proj));
+
+    var image = document.getElementById("texImage");
+    configureTexture( image );
+
+    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
     render();
 }
 
+function envCube() {
+    envQuad( 1, 0, 3, 2 );
+    envQuad( 2, 3, 7, 6 );
+    envQuad( 3, 0, 4, 7 );
+    envQuad( 6, 5, 1, 2 );
+    envQuad( 4, 5, 6, 7 );
+    envQuad( 5, 4, 0, 1 );
+}
 
+function envQuad(a, b, c, d) {
+      var vertices = [
+        vec3( -1000, -1000,  1000 ),
+        vec3( -1000,  1000,  1000 ),
+        vec3(  1000,  1000,  1000 ),
+        vec3(  1000, -1000,  1000 ),
+        vec3( -1000, -1000, -1000 ),
+        vec3( -1000,  1000, -1000 ),
+        vec3(  1000,  1000, -1000 ),
+        vec3(  1000, -1000, -1000 )
+    ];
+
+    var texCo = [
+      vec2(0, 0),
+      vec2(0, 1000),
+      vec2(1000, 1000),
+      vec2(1000, 0)
+    ];
+
+    var indices = [ a, b, c, a, c, d ];
+    var texind  = [ 1, 0, 3, 1, 3, 2 ];
+
+    for ( var i = 0; i < indices.length; ++i ) {
+        points.push( vertices[indices[i]] );
+        texCoords.push( texCo[texind[i]] );
+    }
+}
 
 function colorCube() {
     quad( 1, 0, 3, 2 );
@@ -126,7 +172,7 @@ function colorCube() {
 }
 
 function quad(a, b, c, d) {
-    var vertices = [
+      var vertices = [
         vec3( -0.5, -0.5,  0.5 ),
         vec3( -0.5,  0.5,  0.5 ),
         vec3(  0.5,  0.5,  0.5 ),
@@ -146,6 +192,13 @@ function quad(a, b, c, d) {
         [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
         [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
         [ 1.0, 1.0, 1.0, 1.0 ]   // white
+    ];
+
+    var texCo = [
+      vec2(0, 0),
+      vec2(0, 1),
+      vec2(1, 1),
+      vec2(1, 0)
     ];
 
     var indices = [ a, b, c, a, c, d ];
@@ -189,6 +242,8 @@ function render() {
 	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
 
 	  drawScenery( mv );
+
+    gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
 
     requestAnimFrame( render );
 }
