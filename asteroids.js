@@ -27,7 +27,7 @@ var velocity = 0,
     friction = 0.98; // friction
 
 var matrixLoc;
-var initTime;
+var timeTick;
 
 
 var astNum = 8;
@@ -137,7 +137,7 @@ window.onload = function init() {
 
     gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);*/
 
-    initTime = Date.now();
+    timeTick = Date.now();
 
     render();
 }
@@ -229,15 +229,15 @@ function quad(a, b, c, d) {
 }
 
 // draw a house in location (x, y) of size size
-function house( i, x, y, z, size, mv ) {
-  var t = (Date.now()-initTime)/50;
+function house( x, y, z, size, mv ) {
+  /*var t = (Date.now()-initTime)/50;
 
   var xmove=Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
   var ymove=Math.sin(astDirectionTheta[i])*Math.sin(astDirectionPhi[i]);
-  var zmove=Math.cos(astDirectionTheta[i]);
+  var zmove=Math.cos(astDirectionTheta[i]);*/
 
 
-  mv = mult( mv, translate( x+(t*xmove), y+(t*ymove), z+(t*zmove) ) );
+  mv = mult( mv, translate( x, y, z ) );
   mv = mult( mv, scalem( size, size, size ) );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
@@ -249,9 +249,29 @@ function house( i, x, y, z, size, mv ) {
 }
 
 function drawScenery( mv ) {
+
+    var t = (Date.now()-timeTick)/50;
+    timeTick = Date.now();
+
     // draw houses
     for(var i=0; i<astNum; i++){
-      house( i, astPosX[i], astPosY[i], astPosZ[i], 5.0, mv);
+
+      /*if(astPosX[i] > 100) astPosX[i] -= 210;
+      if(astPosX[i] < -100) astPosX[i] += 210;
+      if(astPosY[i] > 100) astPosY[i] -= 210;
+      if(astPosY[i] < -100) astPosY[i] += 210;
+      if(astPosX[i] > 100) astPosZ[i] -= 210;
+      if(astPosX[i] < -100) astPosZ[i] += 210;*/
+
+      var xmove = Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
+      var ymove = Math.sin(astDirectionTheta[i])*Math.sin(astDirectionPhi[i]);
+      var zmove = Math.cos(astDirectionTheta[i]);
+
+      astPosX[i] += (t*xmove);
+      astPosY[i] += (t*ymove);
+      astPosZ[i] += (t*zmove);
+
+      house( astPosX[i], astPosY[i], astPosZ[i], 5.0, mv);
     }
 
     /*house(-20.0, 50.0, 0.0, 5.0, mv);
