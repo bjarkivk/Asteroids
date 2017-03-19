@@ -27,6 +27,17 @@ var velocity = 0,
     friction = 0.98; // friction
 
 var matrixLoc;
+var initTime;
+
+
+var astNum = 8;
+var astPosX = [];
+var astPosY = [];
+var astPosZ = [];
+var astDirectionTheta = [];
+var astDirectionPhi = [];
+
+
 /*
 function configureTexture( image ) {
     texture = gl.createTexture();
@@ -43,6 +54,8 @@ window.onload = function init() {
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
+
+    initializeAsteroids();
 
     colorCube();
     envCube();
@@ -123,6 +136,9 @@ window.onload = function init() {
     configureTexture( image );
 
     gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);*/
+
+    initTime = Date.now();
+
     render();
 }
 
@@ -213,9 +229,15 @@ function quad(a, b, c, d) {
 }
 
 // draw a house in location (x, y) of size size
-function house( x, y, size, mv ) {
+function house( i, x, y, z, size, mv ) {
+  var t = (Date.now()-initTime)/50;
 
-  mv = mult( mv, translate( x, y, size/2 ) );
+  var xmove=Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
+  var ymove=Math.sin(astDirectionTheta[i])*Math.sin(astDirectionPhi[i]);
+  var zmove=Math.cos(astDirectionTheta[i]);
+
+
+  mv = mult( mv, translate( x+(t*xmove), y+(t*ymove), z+(t*zmove) ) );
   mv = mult( mv, scalem( size, size, size ) );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
@@ -228,14 +250,29 @@ function house( x, y, size, mv ) {
 
 function drawScenery( mv ) {
     // draw houses
-    house(-20.0, 50.0, 5.0, mv);
-    house(0.0, 70.0, 10.0, mv);
-    house(20.0, -10.0, 8.0, mv);
-    house(40.0, 120.0, 10.0, mv);
-    house(-30.0, -50.0, 7.0, mv);
-    house(10.0, -60.0, 10.0, mv);
-    house(-20.0, 75.0, 8.0, mv);
-    house(-40.0, 140.0, 10.0, mv);
+    for(var i=0; i<astNum; i++){
+      house( i, astPosX[i], astPosY[i], astPosZ[i], 5.0, mv);
+    }
+
+    /*house(-20.0, 50.0, 0.0, 5.0, mv);
+    house(0.0, 70.0, 0.0, 10.0, mv);
+    house(20.0, -10.0, 0.0, 8.0, mv);
+    house(40.0, 120.0, 0.0, 10.0, mv);
+    house(-30.0, -50.0, 0.0, 7.0, mv);
+    house(10.0, -60.0, 0.0, 10.0, mv);
+    house(-20.0, 75.0, 0.0, 8.0, mv);
+    house(-40.0, 140.0, 0.0, 10.0, mv);*/
+
+}
+
+function initializeAsteroids(){
+  for(var i=0; i<astNum; i++){
+    astPosX.push((Math.random()*200)-100);
+    astPosY.push((Math.random()*200)-100);
+    astPosZ.push(0.0);
+    astDirectionPhi.push(0.0);
+    astDirectionTheta.push(Math.PI/2.0);
+  }
 }
 
 function render() {
