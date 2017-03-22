@@ -37,6 +37,13 @@ var astPosZ = [];
 var astDirectionTheta = [];
 var astDirectionPhi = [];
 
+var shotNum = 0;
+var shotPosX = [];
+var shotPosY = [];
+var shotPosZ = [];
+var shotDirectionTheta = [];
+var shotDirectionPhi = [];
+
 
 /*
 function configureTexture( image ) {
@@ -93,6 +100,9 @@ window.onload = function init() {
     }, true);
 
     function gameLoop() {
+      if(keyState[32]){
+        createShot(xEye, yEye, zEye, phi, theta);
+      }
       if (keyState[37]){
         phi += (Math.PI/180.0);
       }
@@ -230,11 +240,6 @@ function quad(a, b, c, d) {
 
 // draw a house in location (x, y) of size size
 function house( x, y, z, size, mv ) {
-  /*var t = (Date.now()-initTime)/50;
-
-  var xmove=Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
-  var ymove=Math.sin(astDirectionTheta[i])*Math.sin(astDirectionPhi[i]);
-  var zmove=Math.cos(astDirectionTheta[i]);*/
 
 
   mv = mult( mv, translate( x, y, z ) );
@@ -243,8 +248,8 @@ function house( x, y, z, size, mv ) {
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
 
-   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
-   gl.drawArrays( gl.TRIANGLES, 0, numVertices );
+  gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
+  gl.drawArrays( gl.TRIANGLES, 0, numVertices );
 
 }
 
@@ -256,22 +261,40 @@ function drawScenery( mv ) {
     // draw houses
     for(var i=0; i<astNum; i++){
 
-      /*if(astPosX[i] > 100) astPosX[i] -= 210;
-      if(astPosX[i] < -100) astPosX[i] += 210;
-      if(astPosY[i] > 100) astPosY[i] -= 210;
-      if(astPosY[i] < -100) astPosY[i] += 210;
-      if(astPosX[i] > 100) astPosZ[i] -= 210;
-      if(astPosX[i] < -100) astPosZ[i] += 210;*/
-
       var xmove = Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
       var ymove = Math.sin(astDirectionTheta[i])*Math.sin(astDirectionPhi[i]);
       var zmove = Math.cos(astDirectionTheta[i]);
+
+      if(astPosX[i] > 100 && xmove > 0) astPosX[i] -= 210;
+      if(astPosX[i] < -100 && xmove < 0) astPosX[i] += 210;
+      if(astPosY[i] > 100 && ymove > 0) astPosY[i] -= 210;
+      if(astPosY[i] < -100 && ymove < 0) astPosY[i] += 210;
+      if(astPosZ[i] > 100 && zmove > 0) astPosZ[i] -= 210;
+      if(astPosZ[i] < -100 && zmove < 0) astPosZ[i] += 210;
 
       astPosX[i] += (t*xmove);
       astPosY[i] += (t*ymove);
       astPosZ[i] += (t*zmove);
 
       house( astPosX[i], astPosY[i], astPosZ[i], 5.0, mv);
+    }
+
+    //draw shots
+    for(var i=0; i<shotNum; i++){
+
+      var xmove = Math.sin(shotDirectionTheta[i])*Math.cos(shotDirectionPhi[i]);
+      var ymove = Math.sin(shotDirectionTheta[i])*Math.sin(shotDirectionPhi[i]);
+      var zmove = Math.cos(shotDirectionTheta[i]);
+
+
+
+      shotPosX[i] += (t*xmove/3);
+      shotPosY[i] += (t*ymove/3);
+      shotPosZ[i] += (t*zmove/3);
+
+      if(shotPosX[i] < 100 && shotPosX[i] > -100 && shotPosY[i] < 100 && shotPosY[i] > -100 && shotPosZ[i] < 100 && shotPosZ[i] > -100){
+        house( shotPosX[i], shotPosY[i], shotPosZ[i], 1.0, mv);
+      }
     }
 
     /*house(-20.0, 50.0, 0.0, 5.0, mv);
@@ -289,10 +312,19 @@ function initializeAsteroids(){
   for(var i=0; i<astNum; i++){
     astPosX.push((Math.random()*200)-100);
     astPosY.push((Math.random()*200)-100);
-    astPosZ.push(0.0);
-    astDirectionPhi.push(0.0);
-    astDirectionTheta.push(Math.PI/2.0);
+    astPosZ.push((Math.random()*200)-100);
+    astDirectionPhi.push(2*Math.PI*Math.random());
+    astDirectionTheta.push(Math.PI*Math.random());
   }
+}
+
+function createShot(x, y, z, phi, theta){
+  shotPosX.push(x);
+  shotPosY.push(y);
+  shotPosZ.push(z-3.0);
+  shotDirectionPhi.push(phi);
+  shotDirectionTheta.push(theta);
+  shotNum++;
 }
 
 function render() {
@@ -301,6 +333,7 @@ function render() {
     var mv = mat4();
 	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
     document.getElementById("coordinates").innerHTML = "( " + Math.round(xEye,0) + ", " + Math.round(yEye,0) + ", " + Math.round(zEye,0) + ")";
+    document.getElementById("coordinatesA").innerHTML = "( " + Math.round(astPosX[0],0) + ", " + Math.round(astPosY[0],0) + ", " + Math.round(astPosZ[0],0) + ")";
 
 	  drawScenery( mv );
 
