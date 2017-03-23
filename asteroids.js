@@ -49,6 +49,11 @@ var shotPosY = [];
 var shotPosZ = [];
 var shotDirectionTheta = [];
 var shotDirectionPhi = [];
+var isShotInGame = [];
+
+var shotTimer = Date.now();
+var shotCooldown = 500;
+var shotsAllowed = 4;
 
 
 /*
@@ -101,11 +106,13 @@ window.onload = function init() {
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-    window.addEventListener("keydown", function(e){
+
+    /*window.addEventListener("keydown", function(e){
       if(keyState[32]){
+        setTimeout();
         createShot(xEye, yEye, zEye, phi, theta);
       }
-    });
+    });*/
 
     // smooth eventlistener
     window.addEventListener('keydown',function(e) {
@@ -116,9 +123,15 @@ window.onload = function init() {
     }, true);
 
     function gameLoop() {
-      /*if(keyState[32]){
-        createShot(xEye, yEye, zEye, phi, theta);
-      }*/
+      if(keyState[32]){
+        //setInterval(createShot, 500, xEye, yEye, zEye, phi, theta);
+        if((Date.now()-shotTimer)>shotCooldown && shotsAllowed > 0){
+          createShot(xEye, yEye, zEye, phi, theta);
+          shotTimer = Date.now();
+          shotsAllowed--;
+        }
+
+      }
       if (keyState[37]){
         phi += (Math.PI/180.0);
       }
@@ -372,12 +385,16 @@ function drawScenery( mv ) {
 
 
 
-      shotPosX[i] += (t*xmove/3);
-      shotPosY[i] += (t*ymove/3);
-      shotPosZ[i] += (t*zmove/3);
+      shotPosX[i] += (t*xmove);
+      shotPosY[i] += (t*ymove);
+      shotPosZ[i] += (t*zmove);
 
       if(shotPosX[i] < 100 && shotPosX[i] > -100 && shotPosY[i] < 100 && shotPosY[i] > -100 && shotPosZ[i] < 100 && shotPosZ[i] > -100){
         shot( shotPosX[i], shotPosY[i], shotPosZ[i], mv);
+      }
+      else if(isShotInGame[i] === true){
+        isShotInGame[i] = false;
+        shotsAllowed++;
       }
     }
 
@@ -408,6 +425,7 @@ function createShot(x, y, z, phi, theta){
   shotPosZ.push(z-0.5);
   shotDirectionPhi.push(phi);
   shotDirectionTheta.push(theta);
+  isShotInGame.push(true);
   shotNum++;
 
   /*shotBuffer = gl.createBuffer();
@@ -426,7 +444,7 @@ function render() {
     var mv = mat4();
 	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
     document.getElementById("coordinates").innerHTML = "( " + Math.round(xEye,0) + ", " + Math.round(yEye,0) + ", " + Math.round(zEye,0) + ")";
-    document.getElementById("coordinatesA").innerHTML = "( " + Math.round(astPosX[0],0) + ", " + Math.round(astPosY[0],0) + ", " + Math.round(astPosZ[0],0) + ")";
+    document.getElementById("coordinatesA").innerHTML = "( " + Math.round(shotPosX[0],0) + ", " + Math.round(shotPosY[0],0) + ", " + Math.round(shotPosZ[0],0) + ")";
 
 	  drawScenery( mv );
 
