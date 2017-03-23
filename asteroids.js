@@ -141,10 +141,10 @@ window.onload = function init() {
         phi -= (Math.PI/180.0);
       }
       if (keyState[38]){
-        if(theta-(Math.PI/180.0) > (Math.PI/4.0)) theta -= (Math.PI/180.0);
+        if(theta-(Math.PI/180.0) > (Math.PI/6.0)) theta -= (Math.PI/180.0);
       }
       if (keyState[40]){
-        if(theta+(Math.PI/180.0) < 3.0*(Math.PI/4.0)) theta += (Math.PI/180.0);
+        if(theta+(Math.PI/180.0) < 5.0*(Math.PI/6.0)) theta += (Math.PI/180.0);
       }
       if (keyState[17]) { // CTRL
         if(movementDisabled) {
@@ -454,26 +454,38 @@ function collisionDetection(){
           if(Math.abs(shotPosZ[i] - astPosZ[j]) < shotSize + asteroidSize[j]) {
             // Stór: 12, Miðlungs: 6, Litil: 3.
             //Búum til tvo minni loftsteina
-            if( isShotInGame[i] && astAlive[j] && asteroidSize[j] > 5 ) {
+            if( isShotInGame[i] && astAlive[j] ) {
+              bombSound.currentTime = 0;
+              bombSound.play();
+              shotsAllowed++;
+              isShotInGame[i] = false, astAlive[j] = false;
+            } else continue;
+            if( asteroidSize[j] > 5 ) {
               var phi = 2*Math.PI*Math.random();
               var theta = Math.PI*Math.random();
               createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
               createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi-Math.PI, theta - (Math.PI / 2), asteroidSize[j]/2);
-              bombSound.currentTime = 0;
-              bombSound.play();
-              shotsAllowed++;
-              isShotInGame[i] = false, astAlive[j] = false;
-            }
-            if( isShotInGame[i] && astAlive[j] && asteroidSize[j] <= 5 ) {
-              bombSound.currentTime = 0;
-              bombSound.play();
-              shotsAllowed++;
-              isShotInGame[i] = false, astAlive[j] = false;
             }
           }
         }
       }
 
+    }
+  }
+
+
+  /* has any asteroid hit the player? */
+  for(var i = 0; i < astNum; i++) {
+    //check the X axis
+    if(Math.abs(xEye - astPosX[i]) < asteroidSize[i]) {
+      //check the Y axis
+      if(Math.abs(yEye - astPosY[i]) < asteroidSize[i]) {
+        //check the Z axis
+        if(Math.abs(zEye - astPosZ[i]) < asteroidSize[i]) {
+          //leikmaður tapar
+          console.log("tap");
+        }
+      }
     }
   }
 }
