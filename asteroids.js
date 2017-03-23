@@ -42,6 +42,7 @@ var timeTick;
 
 var astNum = 8;
 var asteroidSize = [];
+var astAlive = [];
 var astPosX = [];
 var astPosY = [];
 var astPosZ = [];
@@ -166,7 +167,7 @@ window.onload = function init() {
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
 
-      //collisionDetection();
+      collisionDetection();
 
       setTimeout(gameLoop, 10);
     }
@@ -326,8 +327,8 @@ function quad(a, b, c, d) {
     }
 }
 
-// draw a house in location (x, y) of size size
-function house( x, y, z, size, mv ) {
+// draw an asteroid in location (x, y) of size size
+function asteroid( x, y, z, size, mv ) {
 
 
   mv = mult( mv, translate( x, y, z ) );
@@ -356,10 +357,10 @@ function shot( x, y, z, mv ) {
 
 function drawScenery( mv ) {
 
-    var t = (Date.now()-timeTick)/25;
+    var t = (Date.now() - timeTick) / 50;
     timeTick = Date.now();
 
-    // draw houses
+    // draw asteroids
     for(var i=0; i<astNum; i++){
 
       var xmove = Math.sin(astDirectionTheta[i])*Math.cos(astDirectionPhi[i]);
@@ -373,23 +374,24 @@ function drawScenery( mv ) {
       if(astPosZ[i] > 100 && zmove > 0) astPosZ[i] -= 210;
       if(astPosZ[i] < -100 && zmove < 0) astPosZ[i] += 210;
 
-      astPosX[i] += (t*xmove);
-      astPosY[i] += (t*ymove);
-      astPosZ[i] += (t*zmove);
-
-      house( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv);
+      astPosX[i] += (t * xmove);
+      astPosY[i] += (t * ymove);
+      astPosZ[i] += (t * zmove);
+      if(astAlive[i]) {
+        asteroid( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv);
+      }
     }
 
     //draw shots
-    for(var i=0; i<shotNum; i++){
+    for(var i = 0; i < shotNum; i++){
 
       var xmove = Math.sin(shotDirectionTheta[i])*Math.cos(shotDirectionPhi[i]);
       var ymove = Math.sin(shotDirectionTheta[i])*Math.sin(shotDirectionPhi[i]);
       var zmove = Math.cos(shotDirectionTheta[i]);
 
-      shotPosX[i] += (t*xmove);
-      shotPosY[i] += (t*ymove);
-      shotPosZ[i] += (t*zmove);
+      shotPosX[i] += (10 * t * xmove);
+      shotPosY[i] += (10 * t * ymove);
+      shotPosZ[i] += (10 * t * zmove);
 
       if(shotPosX[i] < 100 && shotPosX[i] > -100 && shotPosY[i] < 100 && shotPosY[i] > -100 && shotPosZ[i] < 100 && shotPosZ[i] > -100){
         shot( shotPosX[i], shotPosY[i], shotPosZ[i], mv);
@@ -399,20 +401,11 @@ function drawScenery( mv ) {
         shotsAllowed++;
       }
     }
-
-    /*house(-20.0, 50.0, 0.0, 5.0, mv);
-    house(0.0, 70.0, 0.0, 10.0, mv);
-    house(20.0, -10.0, 0.0, 8.0, mv);
-    house(40.0, 120.0, 0.0, 10.0, mv);
-    house(-30.0, -50.0, 0.0, 7.0, mv);
-    house(10.0, -60.0, 0.0, 10.0, mv);
-    house(-20.0, 75.0, 0.0, 8.0, mv);
-    house(-40.0, 140.0, 0.0, 10.0, mv);*/
-
 }
 
 function initializeAsteroids(){
   for(var i=0; i<astNum; i++){
+    astAlive.push(true);
     asteroidSize.push(12);
     astPosX.push((Math.random()*200)-100);
     astPosY.push((Math.random()*200)-100);
@@ -424,6 +417,7 @@ function initializeAsteroids(){
 }
 
 function createAsteroid(x, y, z, phi, theta, size){
+  astAlive.push(true);
   asteroidSize.push(size);
   astPosX.push(x);
   astPosY.push(y);
@@ -453,30 +447,36 @@ function collisionDetection(){
   for(var i = 0; i < shotNum; i++) {
     for(var j = 0; j < astNum; j++) {
       //check the X axis
-      if(Math.abs(shotPosX[i] - astPosX[j] < shotSize + asteroidSize[j])){
+      if(Math.abs(shotPosX[i] - astPosX[j]) < shotSize + asteroidSize[j]) {
         //check the Y axis
-        if(Math.abs(shotPosY[i] - astPosY[j] < shotSize + asteroidSize[j]))
-        {
-            //check the Z axis
-            if(Math.abs(shotPosZ[i] - astPosZ[j] < shotSize + asteroidSize[j]))
-            {
-              // Stór: 12, Miðlungs: 6, Litil: 3.
-              //Búum til tvo minni loftsteina
-              if(asteroidSize[j]>5){
-                var phi = 2*Math.PI*Math.random();
-                var theta = Math.PI*Math.random();
-                createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
-                createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi-Math.PI, theta-(Math.PI/2), asteroidSize[j]/2);
-              }
-
+        if(Math.abs(shotPosY[i] - astPosY[j]) < shotSize + asteroidSize[j]) {
+          //check the Z axis
+          if(Math.abs(shotPosZ[i] - astPosZ[j]) < shotSize + asteroidSize[j]) {
+            // Stór: 12, Miðlungs: 6, Litil: 3.
+            //Búum til tvo minni loftsteina
+            if( isShotInGame[i] && astAlive[j] && asteroidSize[j] > 5 ) {
+              var phi = 2*Math.PI*Math.random();
+              var theta = Math.PI*Math.random();
+              createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
+              createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi-Math.PI, theta - (Math.PI / 2), asteroidSize[j]/2);
+              bombSound.currentTime = 0;
+              bombSound.play();
+              shotsAllowed++;
+              isShotInGame[i] = false, astAlive[j] = false;
             }
+            if( isShotInGame[i] && astAlive[j] && asteroidSize[j] <= 5 ) {
+              bombSound.currentTime = 0;
+              bombSound.play();
+              shotsAllowed++;
+              isShotInGame[i] = false, astAlive[j] = false;
+            }
+          }
         }
       }
 
     }
   }
 }
-
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
