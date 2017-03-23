@@ -3,13 +3,17 @@ var canvas;
 var gl;
 
 var numVertices  = 36;
-
+var shotSound = new Audio("laser.wav");
+var flySound = new Audio("helicopter.wav");
+var bombSound = new Audio("bomb.wav");
+var asteroidAppearSound = new Audio("asteroid.wav");
 
 /*var shotVertices = [];
 var shotColorsBuffer = [];
 var shotBuffer;
 var shotColor = vec4(0.0, 1.0, 0.0);*/
 
+var movementDisabled = true;
 var points = [];
 var texCoords = [];
 var colors = [];
@@ -18,6 +22,7 @@ var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
 var theta = (Math.PI/2.0);
 var phi = 0.0;
+var shotSize = 0.2;
 
 var radius =1000000.0;
 xAt=radius*Math.sin(theta)*Math.cos(phi);
@@ -37,6 +42,7 @@ var timeTick;
 
 
 var astNum = 8;
+var asteroidSize = [];
 var astPosX = [];
 var astPosY = [];
 var astPosZ = [];
@@ -75,7 +81,6 @@ window.onload = function init() {
 
     initializeAsteroids();
 
-
     colorCube();
     //envCube();
     shotCube();
@@ -100,8 +105,6 @@ window.onload = function init() {
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
-
-
     vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
@@ -123,14 +126,13 @@ window.onload = function init() {
     }, true);
 
     function gameLoop() {
-      if(keyState[32]){
-        //setInterval(createShot, 500, xEye, yEye, zEye, phi, theta);
-        if((Date.now()-shotTimer)>shotCooldown && shotsAllowed > 0){
+      if(keyState[32]){ // SPACE
+        if((Date.now() - shotTimer) > shotCooldown && shotsAllowed > 0){
+          shotSound.play();
           createShot(xEye, yEye, zEye, phi, theta);
           shotTimer = Date.now();
           shotsAllowed--;
         }
-
       }
       if (keyState[37]){
         phi += (Math.PI/180.0);
@@ -144,10 +146,16 @@ window.onload = function init() {
       if (keyState[40]){
         if(theta+(Math.PI/180.0) < 3.0*(Math.PI/4.0)) theta += (Math.PI/180.0);
       }
-      if (keyState[17]) {
-        if(velocity < maxspeed)
+      if (keyState[17]) { // CTRL
+        if(movementDisabled) {
+          shotSound.play();
+          movementDisabled = false;
+        }
+        if(velocity < maxspeed) {
           velocity += 0.01;
+        }
       } else {
+        movementDisabled = true;
         velocity *= friction;
       }
       var v = velocity/radius;
@@ -159,7 +167,7 @@ window.onload = function init() {
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
 
-      //collisionDetection();
+      collisionDetection();
 
       setTimeout(gameLoop, 10);
     }
@@ -338,21 +346,19 @@ function house( x, y, z, size, mv ) {
 // draw a shot
 function shot( x, y, z, mv ) {
 
-
   mv = mult( mv, translate( x, y, z ) );
-  mv = mult( mv, scalem( 0.2, 0.2, 0.2 ) );
+  mv = mult( mv, scalem( shotSize, shotSize, shotSize ) );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
 
   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
   gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
-
 }
 
 function drawScenery( mv ) {
 
-    var t = (Date.now()-timeTick)/50;
+    var t = (Date.now()-timeTick)/25;
     timeTick = Date.now();
 
     // draw houses
@@ -373,7 +379,7 @@ function drawScenery( mv ) {
       astPosY[i] += (t*ymove);
       astPosZ[i] += (t*zmove);
 
-      house( astPosX[i], astPosY[i], astPosZ[i], 5.0, mv);
+      house( astPosX[i], astPosY[i], astPosZ[i], asteroidSize, mv);
     }
 
     //draw shots
@@ -382,8 +388,6 @@ function drawScenery( mv ) {
       var xmove = Math.sin(shotDirectionTheta[i])*Math.cos(shotDirectionPhi[i]);
       var ymove = Math.sin(shotDirectionTheta[i])*Math.sin(shotDirectionPhi[i]);
       var zmove = Math.cos(shotDirectionTheta[i]);
-
-
 
       shotPosX[i] += (t*xmove);
       shotPosY[i] += (t*ymove);
@@ -411,6 +415,7 @@ function drawScenery( mv ) {
 
 function initializeAsteroids(){
   for(var i=0; i<astNum; i++){
+    asteroidSize.push(12);
     astPosX.push((Math.random()*200)-100);
     astPosY.push((Math.random()*200)-100);
     astPosZ.push((Math.random()*200)-100);
@@ -435,6 +440,13 @@ function createShot(x, y, z, phi, theta){
 
 function collisionDetection(){
 
+  /* has any shot hit an asteroid? */
+  for(int i = 0; i < shotNum; i++) {
+    for(int j = 0; j < astNum; j++) {
+      if(Math.abs(shotPosX[i] - astPosX[j]) < shotSize + asteroidSize))
+
+    }
+  }
 }
 
 
