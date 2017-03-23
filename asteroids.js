@@ -1,6 +1,38 @@
 
 var canvas, gl;
 
+var shotColors = [
+  [ 0.0, 0.0, 0.0, 1.0 ],  // black
+  [ 0.055, 0.196, 0.016, 1.0 ],  // dark dark green
+  [ 0.082, 0.2, 0.051, 1.0 ],  // dark green
+  [ 0.271, 0.576, 0.192, 1.0 ],  // green
+  [ 0.482, 0.898, 0.373, 1.0 ],  // light green
+  [ 6.0, 0.898, 0.522, 1.0 ],  // light light green
+  [ 0.271, 0.576, 0.192, 1.0 ],  // green
+  [ 1.0, 1.0, 1.0, 1.0 ]   // white
+];
+
+var asteroidColors = [
+  [ 0.1, 0.1, 0.1, 1.0 ],  // grey
+  [ 0.2, 0.2, 0.2, 1.0 ],
+  [ 0.3, 0.3, 0.3, 1.0 ],
+  [ 0.4, 0.4, 0.4, 1.0 ],
+  [ 0.5, 0.5, 0.5, 1.0 ],
+  [ 0.6, 0.6, 0.6, 1.0 ],
+  [ 0.7, 0.7, 0.7, 1.0 ],
+  [ 0.8, 0.8, 0.8, 1.0 ]
+];
+
+var alienColors = [
+    [ 0.0, 0.0, 0.0, 1.0 ],  // black
+    [ 1.0, 0.0, 0.0, 1.0 ],  // red
+    [ 1.0, 1.0, 0.0, 1.0 ],  // yellow
+    [ 0.0, 1.0, 0.0, 1.0 ],  // green
+    [ 0.0, 0.0, 1.0, 1.0 ],  // blue
+    [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
+    [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
+    [ 1.0, 1.0, 1.0, 1.0 ]   // white
+];
 
 var score = 0;
 var numVertices  = 36;
@@ -26,46 +58,24 @@ var xEye = 0.0;
 var yEye = 0.0;
 var zEye = 0.0;
 var keyState = {};
-var velocity = 0,
-    maxspeed = 2, // max speed
-    friction = 0.98; // friction
+var velocity = 0;
+var maxspeed = 2;     // max speed
+var friction = 0.98;  // friction
 
 var matrixLoc;
 var timeTick;
 
-
 var astNum = 8;
-var asteroidSize = [];
-var astAlive = [];
-var astPosX = [];
-var astPosY = [];
-var astPosZ = [];
-var astDirectionTheta = [];
-var astDirectionPhi = [];
+var asteroidSize = [], astAlive = [], astPosX = [], astPosY = [], astPosZ = [];
+var astDirectionTheta = [], astDirectionPhi = [];
 
 var shotNum = 0;
-var shotPosX = [];
-var shotPosY = [];
-var shotPosZ = [];
-var shotDirectionTheta = [];
-var shotDirectionPhi = [];
-var isShotInGame = [];
+var shotPosX = [], shotPosY = [], shotPosZ = [];
+var shotDirectionTheta = [], shotDirectionPhi = [], isShotInGame = [];
 
 var shotTimer = Date.now();
 var shotCooldown = 500;
 var shotsAllowed = 4;
-
-
-/*
-function configureTexture( image ) {
-    texture = gl.createTexture();
-    gl.bindTexture( gl.TEXTURE_2D, texture );
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
-    gl.generateMipmap( gl.TEXTURE_2D );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-}*/
 
 window.onload = function init() {
     canvas = document.getElementById( "gl-canvas" );
@@ -75,9 +85,9 @@ window.onload = function init() {
 
     initializeAsteroids();
 
-    colorCube();
-    //envCube();
-    shotCube();
+    cube(asteroidColors, true);
+    cube(shotColors, true);
+    cube(alienColors, false);
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
@@ -180,55 +190,16 @@ window.onload = function init() {
     render();
 }
 
-function envCube() {
-    envQuad( 1, 0, 3, 2 );
-    envQuad( 2, 3, 7, 6 );
-    envQuad( 3, 0, 4, 7 );
-    envQuad( 6, 5, 1, 2 );
-    envQuad( 4, 5, 6, 7 );
-    envQuad( 5, 4, 0, 1 );
+function cube(colors, type) {
+    quad( 1, 0, 3, 2, colors, type);
+    quad( 2, 3, 7, 6, colors, type );
+    quad( 3, 0, 4, 7, colors, type );
+    quad( 6, 5, 1, 2, colors, type );
+    quad( 4, 5, 6, 7, colors, type );
+    quad( 5, 4, 0, 1, colors, type );
 }
 
-function envQuad(a, b, c, d) {
-      var size = 2;
-      var vertices = [
-        vec3( -size, -size,  size ),
-        vec3( -size,  size,  size ),
-        vec3(  size,  size,  size ),
-        vec3(  size, -size,  size ),
-        vec3( -size, -size, -size ),
-        vec3( -size,  size, -size ),
-        vec3(  size,  size, -size ),
-        vec3(  size, -size, -size )
-    ];
-
-    var texCo = [
-      vec2(0, 0),
-      vec2(0, 1000),
-      vec2(1000, 1000),
-      vec2(1000, 0)
-    ];
-
-    var indices = [ a, b, c, a, c, d ];
-    //var texind  = [ 1, 0, 3, 1, 3, 2 ];
-
-    for ( var i = 0; i < indices.length; ++i ) {
-        points.push( vertices[indices[i]] );
-        colors.push(vec4( 1.0, 1.0, 0.0, 1.0 ));
-        // texCoords.push( texCo[texind[i]] );
-    }
-}
-
-function shotCube() {
-    shotquad( 1, 0, 3, 2 );
-    shotquad( 2, 3, 7, 6 );
-    shotquad( 3, 0, 4, 7 );
-    shotquad( 6, 5, 1, 2 );
-    shotquad( 4, 5, 6, 7 );
-    shotquad( 5, 4, 0, 1 );
-}
-
-function shotquad(a, b, c, d) {
+function quad(a, b, c, d, col, type) {
       var vertices = [
         vec3( -0.5, -0.5,  0.5 ),
         vec3( -0.5,  0.5,  0.5 ),
@@ -240,67 +211,12 @@ function shotquad(a, b, c, d) {
         vec3(  0.5, -0.5, -0.5 )
     ];
 
-    var vertexColors = [
-        [ 0.0, 0.0, 0.0, 1.0 ],  // black
-        [ 0.055, 0.196, 0.016, 1.0 ],  // dark dark green
-        [ 0.082, 0.2, 0.051, 1.0 ],  // dark green
-        [ 0.271, 0.576, 0.192, 1.0 ],  // green
-        [ 0.482, 0.898, 0.373, 1.0 ],  // light green
-        [ 6.0, 0.898, 0.522, 1.0 ],  // light light green
-        [ 0.271, 0.576, 0.192, 1.0 ],  // green
-        [ 1.0, 1.0, 1.0, 1.0 ]   // white
-    ];
-
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
         points.push( vertices[indices[i]] );
-        //colors.push( vertexColors[indices[i]] );
-
-        // for solid colored faces use
-        colors.push(vertexColors[a]);
-
-    }
-}
-
-function colorCube() {
-    quad( 1, 0, 3, 2 );
-    quad( 2, 3, 7, 6 );
-    quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
-    quad( 4, 5, 6, 7 );
-    quad( 5, 4, 0, 1 );
-}
-
-function quad(a, b, c, d) {
-      var vertices = [
-        vec3( -0.5, -0.5,  0.5 ),
-        vec3( -0.5,  0.5,  0.5 ),
-        vec3(  0.5,  0.5,  0.5 ),
-        vec3(  0.5, -0.5,  0.5 ),
-        vec3( -0.5, -0.5, -0.5 ),
-        vec3( -0.5,  0.5, -0.5 ),
-        vec3(  0.5,  0.5, -0.5 ),
-        vec3(  0.5, -0.5, -0.5 )
-    ];
-
-    var vertexColors = [
-        [ 0.1, 0.1, 0.1, 1.0 ],  // grey
-        [ 0.2, 0.2, 0.2, 1.0 ],
-        [ 0.3, 0.3, 0.3, 1.0 ],
-        [ 0.4, 0.4, 0.4, 1.0 ],
-        [ 0.5, 0.5, 0.5, 1.0 ],
-        [ 0.6, 0.6, 0.6, 1.0 ],
-        [ 0.7, 0.7, 0.7, 1.0 ],
-        [ 0.8, 0.8, 0.8, 1.0 ]   
-    ];
-
-    var indices = [ a, b, c, a, c, d ];
-
-    for ( var i = 0; i < indices.length; ++i ) {
-        points.push( vertices[indices[i]] );
-        // for solid colored faces use
-        colors.push(vertexColors[a]);
+        if(type) colors.push( col[a] );
+        else colors.push( col[indices[i]] );
     }
 }
 
@@ -483,3 +399,14 @@ function render() {
 
     requestAnimFrame( render );
 }
+
+/*
+function configureTexture( image ) {
+    texture = gl.createTexture();
+    gl.bindTexture( gl.TEXTURE_2D, texture );
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
+    gl.generateMipmap( gl.TEXTURE_2D );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+}*/
