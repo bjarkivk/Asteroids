@@ -1,6 +1,8 @@
 
 var canvas, gl;
 
+
+var score = 0;
 var numVertices  = 36;
 var shotSound = new Audio("laser.wav");
 var bombSound = new Audio("bomb.wav");
@@ -283,21 +285,22 @@ function quad(a, b, c, d) {
     ];
 
     var vertexColors = [
-        [ 0.0, 0.0, 0.0, 1.0 ],  // black
-        [ 1.0, 0.0, 0.0, 1.0 ],  // red
-        [ 1.0, 1.0, 0.0, 1.0 ],  // yellow
-        [ 0.0, 1.0, 0.0, 1.0 ],  // green
-        [ 0.0, 0.0, 1.0, 1.0 ],  // blue
-        [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
-        [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
-        [ 1.0, 1.0, 1.0, 1.0 ]   // white
+        [ 0.1, 0.1, 0.1, 1.0 ],  // grey
+        [ 0.2, 0.2, 0.2, 1.0 ],
+        [ 0.3, 0.3, 0.3, 1.0 ],
+        [ 0.4, 0.4, 0.4, 1.0 ],
+        [ 0.5, 0.5, 0.5, 1.0 ],
+        [ 0.6, 0.6, 0.6, 1.0 ],
+        [ 0.7, 0.7, 0.7, 1.0 ],
+        [ 0.8, 0.8, 0.8, 1.0 ]   
     ];
 
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
         points.push( vertices[indices[i]] );
-        colors.push(vertexColors[indices[i]]);
+        // for solid colored faces use
+        colors.push(vertexColors[a]);
     }
 }
 
@@ -432,6 +435,18 @@ function collisionDetection(){
               createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
               createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi - Math.PI, theta - (Math.PI / 2), asteroidSize[j] / 2);
             }
+            // count score
+            switch(asteroidSize[j]){
+              case 12:
+                score++;
+                break;
+              case 6:
+                score+=2;
+                break;
+              case 3:
+                score+=3;
+
+            }
           }
         }
       }
@@ -460,7 +475,7 @@ function render() {
     var mv = mat4();
 	  mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
     document.getElementById("coordinates").innerHTML = "( " + Math.round(xEye,0) + ", " + Math.round(yEye,0) + ", " + Math.round(zEye,0) + ")";
-    document.getElementById("coordinatesA").innerHTML = "( " + Math.round(shotPosX[0],0) + ", " + Math.round(shotPosY[0],0) + ", " + Math.round(shotPosZ[0],0) + ")";
+    document.getElementById("score").innerHTML = "Score: " + score;
 
 	  drawScenery( mv );
 
