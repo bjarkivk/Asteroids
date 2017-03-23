@@ -65,13 +65,24 @@ var friction = 0.98;  // friction
 var matrixLoc;
 var timeTick;
 
-var astNum = 8;
+var astNum = 4;
 var asteroidSize = [], astAlive = [], astPosX = [], astPosY = [], astPosZ = [];
 var astDirectionTheta = [], astDirectionPhi = [];
 
 var shotNum = 0;
 var shotPosX = [], shotPosY = [], shotPosZ = [];
 var shotDirectionTheta = [], shotDirectionPhi = [], isShotInGame = [];
+
+var alienNum = 0;
+var alienPack = 1; //how many apperar at once
+var alienSize = 8;
+var alienAlive = [], alienPosX = [], alienPosY = [], alienPosZ = [];
+var alienDirectionTheta = [], alienDirectionPhi = [];
+var alienTimer = Date.now();
+
+var alienshotNum = 0;
+var alienshotPosX = [], alienshotPosY = [], alienshotPosZ = [];
+var alienshotDirectionTheta = [], alienshotDirectionPhi = [], isAlienShotInGame = [];
 
 var shotTimer = Date.now();
 var shotCooldown = 500;
@@ -170,6 +181,20 @@ window.onload = function init() {
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
 
+      //create aliens every 10 seconds
+      // after 10 sec: 1 alien
+      // after 20 sec: 2 aliens
+      // after 30 sec: 3 aliens
+      if((Date.now()-alienTimer) > 10000){
+        var x = alienPack;
+        while(x!=0){
+          createAlien();
+          x--;
+        }
+        alienPack++;
+        alienTimer = Date.now();
+      }
+
       collisionDetection();
 
       setTimeout(gameLoop, 10);
@@ -220,8 +245,8 @@ function quad(a, b, c, d, col, type) {
     }
 }
 
-// draw an asteroid in location (x, y) of size size
-function asteroid( x, y, z, size, mv ) {
+//
+function drawItem( x, y, z, size, mv, itemIndex ) {
   mv = mult( mv, translate( x, y, z ) );
   mv = mult( mv, scalem( size, size, size ) );
 
@@ -229,9 +254,10 @@ function asteroid( x, y, z, size, mv ) {
   gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
 
   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
-  gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-}
 
+  gl.drawArrays( gl.TRIANGLES, itemIndex*numVertices, numVertices );
+}
+/*
 // draw a shot
 function shot( x, y, z, mv ) {
   mv = mult( mv, translate( x, y, z ) );
@@ -243,6 +269,8 @@ function shot( x, y, z, mv ) {
   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
   gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
 }
+*/
+
 
 function drawScenery( mv ) {
 
@@ -267,7 +295,7 @@ function drawScenery( mv ) {
       astPosY[i] += (t * ymove);
       astPosZ[i] += (t * zmove);
       if(astAlive[i]) {
-        asteroid( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv);
+        drawItem( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv, 0);
       }
     }
 
@@ -283,12 +311,36 @@ function drawScenery( mv ) {
       shotPosZ[i] += (10 * t * zmove);
 
       if(shotPosX[i] < 100 && shotPosX[i] > -100 && shotPosY[i] < 100 && shotPosY[i] > -100 && shotPosZ[i] < 100 && shotPosZ[i] > -100){
-        shot( shotPosX[i], shotPosY[i], shotPosZ[i], mv);
+        drawItem( shotPosX[i], shotPosY[i], shotPosZ[i], shotSize, mv, 1);
       }
       else if(isShotInGame[i] === true){
         isShotInGame[i] = false;
         shotsAllowed++;
       }
+    }
+
+    // draw aliens
+    for(var i = 0; i < alienNum; i++){
+
+      var xmove = Math.sin(alienDirectionTheta[i])*Math.cos(alienDirectionPhi[i]);
+      var ymove = Math.sin(alienDirectionTheta[i])*Math.sin(alienDirectionPhi[i]);
+      var zmove = Math.cos(alienDirectionTheta[i]);
+
+      alienPosX[i] += (t * xmove);
+      alienPosY[i] += (t * ymove);
+      alienPosZ[i] += (t * zmove);
+
+      if(alienPosX[i] > 100 && xmove > 0) astPosX[i] -= 210;
+      if(alienPosX[i] < -100 && xmove < 0) astPosX[i] += 210;
+      if(alienPosY[i] > 100 && ymove > 0) astPosY[i] -= 210;
+      if(alienPosY[i] < -100 && ymove < 0) astPosY[i] += 210;
+      if(alienPosZ[i] > 100 && zmove > 0) astPosZ[i] -= 210;
+      if(alienPosZ[i] < -100 && zmove < 0) astPosZ[i] += 210;
+
+      if(alienAlive[i]) {
+        drawItem( alienPosX[i], alienPosY[i], alienPosZ[i], alienSize, mv, 2);
+      }
+
     }
 }
 
@@ -314,6 +366,50 @@ function createAsteroid(x, y, z, phi, theta, size){
   astDirectionPhi.push(phi);
   astDirectionTheta.push(theta);
   astNum++;
+}
+
+function createAlien(){
+  alienAlive.push(true);
+  var x, y, z;
+  var s = Math.floor(Math.random()*6);
+
+  switch(s){
+    case 0:
+      x = (Math.random()*200)-100;
+      y = (Math.random()*200)-100;
+      z = -100;
+      break;
+    case 1:
+      x = (Math.random()*200)-100;
+      y = (Math.random()*200)-100;
+      z = 100;
+      break;
+    case 2:
+      x = (Math.random()*200)-100;
+      y = -100;
+      z = (Math.random()*200)-100;
+      break;
+    case 3:
+      x = (Math.random()*200)-100;
+      y = 100;
+      z = (Math.random()*200)-100;
+      break;
+    case 4:
+      x = -100;
+      y = (Math.random()*200)-100;
+      z = (Math.random()*200)-100;
+      break;
+    case 5:
+      x = 100;
+      y = (Math.random()*200)-100;
+      z = (Math.random()*200)-100;
+  }
+  alienPosX.push(x);
+  alienPosY.push(y);
+  alienPosZ.push(z);
+  alienDirectionPhi.push(2*Math.PI*Math.random());
+  alienDirectionTheta.push(Math.PI*Math.random());
+  alienNum++;
 }
 
 function createShot(x, y, z, phi, theta){
