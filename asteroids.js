@@ -4,7 +4,6 @@ var gl;
 
 var numVertices  = 36;
 var shotSound = new Audio("laser.wav");
-//var flySound = new Audio("helicopter.wav");
 var bombSound = new Audio("bomb.wav");
 var asteroidAppearSound = new Audio("asteroid.wav");
 
@@ -167,7 +166,7 @@ window.onload = function init() {
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
 
-      collisionDetection();
+      //collisionDetection();
 
       setTimeout(gameLoop, 10);
     }
@@ -184,7 +183,6 @@ window.onload = function init() {
 /*
     var image = document.getElementById("texImage");
     configureTexture( image );
-
     gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);*/
 
     timeTick = Date.now();
@@ -379,10 +377,10 @@ function drawScenery( mv ) {
       astPosY[i] += (t*ymove);
       astPosZ[i] += (t*zmove);
 
-      house( astPosX[i], astPosY[i], astPosZ[i], asteroidSize, mv);
+      house( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv);
     }
 
-    // draw shots
+    //draw shots
     for(var i=0; i<shotNum; i++){
 
       var xmove = Math.sin(shotDirectionTheta[i])*Math.cos(shotDirectionPhi[i]);
@@ -422,6 +420,17 @@ function initializeAsteroids(){
     astDirectionPhi.push(2*Math.PI*Math.random());
     astDirectionTheta.push(Math.PI*Math.random());
   }
+  console.log("ast");
+}
+
+function createAsteroid(x, y, z, phi, theta, size){
+  asteroidSize.push(size);
+  astPosX.push(x);
+  astPosY.push(y);
+  astPosZ.push(z);
+  astDirectionPhi.push(phi);
+  astDirectionTheta.push(theta);
+  astNum++;
 }
 
 function createShot(x, y, z, phi, theta){
@@ -441,9 +450,28 @@ function createShot(x, y, z, phi, theta){
 function collisionDetection(){
 
   /* has any shot hit an asteroid? */
-  for(int i = 0; i < shotNum; i++) {
-    for(int j = 0; j < astNum; j++) {
-      if(Math.abs(shotPosX[i] - astPosX[j]) < shotSize + asteroidSize))
+  for(var i = 0; i < shotNum; i++) {
+    for(var j = 0; j < astNum; j++) {
+      //check the X axis
+      if(Math.abs(shotPosX[i] - astPosX[j] < shotSize + asteroidSize[j])){
+        //check the Y axis
+        if(Math.abs(shotPosY[i] - astPosY[j] < shotSize + asteroidSize[j]))
+        {
+            //check the Z axis
+            if(Math.abs(shotPosZ[i] - astPosZ[j] < shotSize + asteroidSize[j]))
+            {
+              // Stór: 12, Miðlungs: 6, Litil: 3.
+              //Búum til tvo minni loftsteina
+              if(asteroidSize[j]>5){
+                var phi = 2*Math.PI*Math.random();
+                var theta = Math.PI*Math.random();
+                createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
+                createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi-Math.PI, theta-(Math.PI/2), asteroidSize[j]/2);
+              }
+
+            }
+        }
+      }
 
     }
   }
