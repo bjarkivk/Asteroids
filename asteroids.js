@@ -1,22 +1,14 @@
 
-var canvas;
-var gl;
+var canvas, gl;
 
 var numVertices  = 36;
 var shotSound = new Audio("laser.wav");
 var bombSound = new Audio("bomb.wav");
-var asteroidAppearSound = new Audio("asteroid.wav");
-
-/*var shotVertices = [];
-var shotColorsBuffer = [];
-var shotBuffer;
-var shotColor = vec4(0.0, 1.0, 0.0);*/
+var alienSound = new Audio("alien.wav");
+var engineSound = new Audio("jet.wav");
 
 var movementDisabled = true;
-var points = [];
-var texCoords = [];
-var colors = [];
-var texture;
+var points = [], colors = [];
 var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
 
 var theta = (Math.PI/2.0);
@@ -109,14 +101,6 @@ window.onload = function init() {
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-
-    /*window.addEventListener("keydown", function(e){
-      if(keyState[32]){
-        setTimeout();
-        createShot(xEye, yEye, zEye, phi, theta);
-      }
-    });*/
-
     // smooth eventlistener
     window.addEventListener('keydown',function(e) {
       keyState[e.keyCode || e.which] = true;
@@ -148,13 +132,20 @@ window.onload = function init() {
       }
       if (keyState[17]) { // CTRL
         if(movementDisabled) {
-          shotSound.play();
+          engineSound.currentTime = 0;
+          engineSound.play();
           movementDisabled = false;
+        } else {
+          if(engineSound.currentTime >= 4) {
+            engineSound.currentTime = 0;
+            engineSound.play();
+          }
         }
         if(velocity < maxspeed) {
           velocity += 0.01;
         }
       } else {
+        engineSound.pause();
         movementDisabled = true;
         velocity *= friction;
       }
@@ -181,10 +172,6 @@ window.onload = function init() {
     pLoc = gl.getUniformLocation( program, "projection" );
     proj = perspective( 50.0, 1.0, 1.0, 500.0 );
     gl.uniformMatrix4fv(pLoc, false, flatten(proj));
-/*
-    var image = document.getElementById("texImage");
-    configureTexture( image );
-    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);*/
 
     timeTick = Date.now();
 
@@ -262,12 +249,6 @@ function shotquad(a, b, c, d) {
         [ 1.0, 1.0, 1.0, 1.0 ]   // white
     ];
 
-    // We need to partition the quad into two triangles in order for
-    // WebGL to be able to render it.  In this case, we create two
-    // triangles from the quad indices
-
-    //vertex color assigned by the index of the vertex
-
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
@@ -312,13 +293,6 @@ function quad(a, b, c, d) {
         [ 1.0, 1.0, 1.0, 1.0 ]   // white
     ];
 
-    var texCo = [
-      vec2(0, 0),
-      vec2(0, 1),
-      vec2(1, 1),
-      vec2(1, 0)
-    ];
-
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
@@ -329,8 +303,6 @@ function quad(a, b, c, d) {
 
 // draw an asteroid in location (x, y) of size size
 function asteroid( x, y, z, size, mv ) {
-
-
   mv = mult( mv, translate( x, y, z ) );
   mv = mult( mv, scalem( size, size, size ) );
 
@@ -339,12 +311,10 @@ function asteroid( x, y, z, size, mv ) {
 
   gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
   gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-
 }
 
 // draw a shot
 function shot( x, y, z, mv ) {
-
   mv = mult( mv, translate( x, y, z ) );
   mv = mult( mv, scalem( shotSize, shotSize, shotSize ) );
 
@@ -382,7 +352,7 @@ function drawScenery( mv ) {
       }
     }
 
-    //draw shots
+    // draw shots
     for(var i = 0; i < shotNum; i++){
 
       var xmove = Math.sin(shotDirectionTheta[i])*Math.cos(shotDirectionPhi[i]);
@@ -435,10 +405,6 @@ function createShot(x, y, z, phi, theta){
   shotDirectionTheta.push(theta);
   isShotInGame.push(true);
   shotNum++;
-
-  /*shotBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, shotBuffer );*/
-  //gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 }
 
 function collisionDetection(){
@@ -461,18 +427,16 @@ function collisionDetection(){
               isShotInGame[i] = false, astAlive[j] = false;
             } else continue;
             if( asteroidSize[j] > 5 ) {
-              var phi = 2*Math.PI*Math.random();
-              var theta = Math.PI*Math.random();
+              var phi = 2 * Math.PI * Math.random();
+              var theta = Math.PI * Math.random();
               createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi, theta, asteroidSize[j]/2);
-              createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi-Math.PI, theta - (Math.PI / 2), asteroidSize[j]/2);
+              createAsteroid(astPosX[j], astPosY[j], astPosZ[j], phi - Math.PI, theta - (Math.PI / 2), asteroidSize[j] / 2);
             }
           }
         }
       }
-
     }
   }
-
 
   /* has any asteroid hit the player? */
   for(var i = 0; i < astNum; i++) {
