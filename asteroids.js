@@ -4,6 +4,12 @@ var gl;
 
 var numVertices  = 36;
 
+
+/*var shotVertices = [];
+var shotColorsBuffer = [];
+var shotBuffer;
+var shotColor = vec4(0.0, 1.0, 0.0);*/
+
 var points = [];
 var texCoords = [];
 var colors = [];
@@ -64,8 +70,10 @@ window.onload = function init() {
 
     initializeAsteroids();
 
+
     colorCube();
-    envCube();
+    //envCube();
+    shotCube();
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
@@ -87,9 +95,17 @@ window.onload = function init() {
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
+
+
     vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
+
+    window.addEventListener("keydown", function(e){
+      if(keyState[32]){
+        createShot(xEye, yEye, zEye, phi, theta);
+      }
+    });
 
     // smooth eventlistener
     window.addEventListener('keydown',function(e) {
@@ -100,9 +116,9 @@ window.onload = function init() {
     }, true);
 
     function gameLoop() {
-      if(keyState[32]){
+      /*if(keyState[32]){
         createShot(xEye, yEye, zEye, phi, theta);
-      }
+      }*/
       if (keyState[37]){
         phi += (Math.PI/180.0);
       }
@@ -129,6 +145,9 @@ window.onload = function init() {
       xAt=radius*Math.sin(theta)*Math.cos(phi);
       yAt=radius*Math.sin(theta)*Math.sin(phi);
       zAt=radius*Math.cos(theta);
+
+      //collisionDetection();
+
       setTimeout(gameLoop, 10);
     }
     gameLoop();
@@ -188,6 +207,56 @@ function envQuad(a, b, c, d) {
         points.push( vertices[indices[i]] );
         colors.push(vec4( 1.0, 1.0, 0.0, 1.0 ));
         // texCoords.push( texCo[texind[i]] );
+    }
+}
+
+function shotCube() {
+    shotquad( 1, 0, 3, 2 );
+    shotquad( 2, 3, 7, 6 );
+    shotquad( 3, 0, 4, 7 );
+    shotquad( 6, 5, 1, 2 );
+    shotquad( 4, 5, 6, 7 );
+    shotquad( 5, 4, 0, 1 );
+}
+
+function shotquad(a, b, c, d) {
+      var vertices = [
+        vec3( -0.5, -0.5,  0.5 ),
+        vec3( -0.5,  0.5,  0.5 ),
+        vec3(  0.5,  0.5,  0.5 ),
+        vec3(  0.5, -0.5,  0.5 ),
+        vec3( -0.5, -0.5, -0.5 ),
+        vec3( -0.5,  0.5, -0.5 ),
+        vec3(  0.5,  0.5, -0.5 ),
+        vec3(  0.5, -0.5, -0.5 )
+    ];
+
+    var vertexColors = [
+        [ 0.0, 0.0, 0.0, 1.0 ],  // black
+        [ 0.055, 0.196, 0.016, 1.0 ],  // dark dark green
+        [ 0.082, 0.2, 0.051, 1.0 ],  // dark green
+        [ 0.271, 0.576, 0.192, 1.0 ],  // green
+        [ 0.482, 0.898, 0.373, 1.0 ],  // light green
+        [ 6.0, 0.898, 0.522, 1.0 ],  // light light green
+        [ 0.271, 0.576, 0.192, 1.0 ],  // green
+        [ 1.0, 1.0, 1.0, 1.0 ]   // white
+    ];
+
+    // We need to partition the quad into two triangles in order for
+    // WebGL to be able to render it.  In this case, we create two
+    // triangles from the quad indices
+
+    //vertex color assigned by the index of the vertex
+
+    var indices = [ a, b, c, a, c, d ];
+
+    for ( var i = 0; i < indices.length; ++i ) {
+        points.push( vertices[indices[i]] );
+        //colors.push( vertexColors[indices[i]] );
+
+        // for solid colored faces use
+        colors.push(vertexColors[a]);
+
     }
 }
 
@@ -253,6 +322,21 @@ function house( x, y, z, size, mv ) {
 
 }
 
+// draw a shot
+function shot( x, y, z, mv ) {
+
+
+  mv = mult( mv, translate( x, y, z ) );
+  mv = mult( mv, scalem( 0.2, 0.2, 0.2 ) );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+  gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
+
+  gl.uniformMatrix4fv(mvLoc, false, flatten(mv));
+  gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
+
+}
+
 function drawScenery( mv ) {
 
     var t = (Date.now()-timeTick)/50;
@@ -293,7 +377,7 @@ function drawScenery( mv ) {
       shotPosZ[i] += (t*zmove/3);
 
       if(shotPosX[i] < 100 && shotPosX[i] > -100 && shotPosY[i] < 100 && shotPosY[i] > -100 && shotPosZ[i] < 100 && shotPosZ[i] > -100){
-        house( shotPosX[i], shotPosY[i], shotPosZ[i], 1.0, mv);
+        shot( shotPosX[i], shotPosY[i], shotPosZ[i], mv);
       }
     }
 
@@ -321,11 +405,20 @@ function initializeAsteroids(){
 function createShot(x, y, z, phi, theta){
   shotPosX.push(x);
   shotPosY.push(y);
-  shotPosZ.push(z-3.0);
+  shotPosZ.push(z-0.5);
   shotDirectionPhi.push(phi);
   shotDirectionTheta.push(theta);
   shotNum++;
+
+  /*shotBuffer = gl.createBuffer();
+  gl.bindBuffer( gl.ARRAY_BUFFER, shotBuffer );*/
+  //gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 }
+
+function collisionDetection(){
+
+}
+
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -337,7 +430,7 @@ function render() {
 
 	  drawScenery( mv );
 
-    gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
+    //gl.drawArrays( gl.TRIANGLES, numVertices, numVertices );
 
     requestAnimFrame( render );
 }
