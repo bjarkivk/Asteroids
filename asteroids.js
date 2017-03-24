@@ -34,7 +34,6 @@ var alienColors = [
     [ 1.0, 1.0, 1.0, 1.0 ]   // white
 ];
 
-// ATH! FINNA FLEIRI LITI
 var alienShotColors = [
   [ 1.000, 0.000, 0.000, 1.0 ], // various red colors
   [ 1.000, 0.000, 0.000, 1.0 ],
@@ -44,6 +43,17 @@ var alienShotColors = [
   [ 1.000, 0.000, 0.000, 1.0 ],
   [ 1.000, 0.000, 0.000, 1.0 ],
   [ 1.000, 0.000, 0.000, 1.0 ]
+];
+
+var environmentColors = [
+  [ 0.000, 0.000, 0.000, 1.0 ],  // black - not used
+  [ 0.561, 0.471, 0.678, 1.0 ],  // various purple tones : 0
+  [ 0.420, 0.306, 0.565, 1.0 ],  // 1
+  [ 0.294, 0.176, 0.451, 1.0 ],  // 2
+  [ 0.192, 0.082, 0.341, 1.0 ],  // 3
+  [ 0.110, 0.020, 0.227, 1.0 ],  // 4
+  [ 0.294, 0.176, 0.451, 1.0 ],  // 2
+  [ 1.000, 1.000, 1.000, 1.0 ]   // white - not used
 ];
 
 var SHOT_SOUND = new Audio("laser.wav");
@@ -57,14 +67,15 @@ var INITIAL_ASTEROID_SIZE = 12;
 var SHOT_SIZE = 0.2;
 var ALIEN_SHOT_SIZE = 3;
 var ALIEN_SIZE = 8;
-var ALIEN_APPEARANCE_INTERVAL = 10000; // 10 seconds
-var ALIEN_FIRE_INTERVAL = 5000 // 5 seconds
+var ALIEN_APPEARANCE_INTERVAL = 12000;
+var ASTEROID_APPEARANCE_INTERVAL = 12000;
+var ALIEN_FIRE_INTERVAL = 5000;
 var SHOT_COOLDOWN = 500;
 var MAX_SPEED = 2;
 var FRICTION = 0.98;
 var RADIUS = 1000000;
-var BOUNDARY = 100;
 var TOTAL_SHOTS = 4;
+var BOUNDARY = 220;
 
 var theta = (Math.PI / 2);
 var phi = 0;
@@ -96,11 +107,11 @@ var alienDirectionTheta = [], alienDirectionPhi = [], alienAlive = [];
 
 var alienShotNum = 0;
 var alienShotPosX = [], alienShotPosY = [], alienShotPosZ = [];
-var alienShotDirX = [], alienShotDirY = [], alienShotDirZ = [], alienShotInGame = [];
+var alienShotDirectionTheta = [], alienShotDirectionPhi = [], alienShotInGame = [];
 
 var shotTimer = Date.now();
 
-var renderInterval, gameInterval, alienCreationInterval, alienFireIntervals = [];
+var renderInterval, gameInterval, alienCreationInterval, asteroidCreationInterval, alienFireInterval;
 
 window.onload = function init() {
   canvas = document.getElementById( "gl-canvas" );
@@ -113,6 +124,7 @@ window.onload = function init() {
   cube(shotColors, true);       // shot
   cube(alienColors, false);     // alien
   cube(alienShotColors, true);  // alien shot
+  cube(environmentColors, true);// environment
 
   gl.viewport( 0, 0, canvas.width, canvas.height );
   gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
@@ -159,7 +171,9 @@ window.onload = function init() {
   // Event-listener for new game
   document.getElementById("new-game").addEventListener("click", newGame);
 
+  asteroidCreationInterval = setInterval(createRandomAsteroid, ASTEROID_APPEARANCE_INTERVAL);
   alienCreationInterval = setInterval(createAlien, ALIEN_APPEARANCE_INTERVAL);
+  alienFireInterval = setInterval(alienFire, ALIEN_FIRE_INTERVAL);
   gameInterval = setInterval(gameLoop, 10);
   renderInterval = setInterval(render, 10);
   render();
@@ -281,6 +295,38 @@ function shoot() {
   }
 }
 
+function createRandomAsteroid() {
+
+  var x, y, z, coord1, coord2, coord3;
+  var randomCase = Math.floor(Math.random() * 3); // 0, 1, 2
+  coord1 = (Math.random() * 2*BOUNDARY) - BOUNDARY;
+  coord2 = (Math.random() * 2*BOUNDARY) - BOUNDARY;
+  if(Math.random() < 0.5) coord3 = BOUNDARY;
+  else coord3 = -BOUNDARY;
+
+  // Let alien appear at random location on space-boundary
+  switch(randomCase) {
+    case 0:
+      x = coord1;
+      y = coord2;
+      z = coord3;
+      break;
+    case 1:
+      x = coord1;
+      y = coord3;
+      z = coord2;
+      break;
+    case 2:
+      x = coord3;
+      y = coord1;
+      z = coord2;
+  }
+  var p = 2 * Math.PI * Math.random();
+  var t = Math.PI * Math.random();
+
+  createAsteroid(x, y, z, p, t, INITIAL_ASTEROID_SIZE);
+}
+
 function createAsteroid(x, y, z, phi, theta, size){
   astAlive.push(true);
   asteroidSize.push(size);
@@ -332,35 +378,26 @@ function createAlien() {
 }
 
 function createAlienShot() {
-  alienShotInGame.push(false);
+  alienShotInGame.push(true);
   alienShotPosX.push(0);
   alienShotPosY.push(0);
   alienShotPosZ.push(0);
-  alienShotDirX.push(0);
-  alienShotDirY.push(0);
-  alienShotDirZ.push(0);
-  createAlienFireInterval(alienShotPosX.length - 1);
+  alienShotDirectionTheta.push(0);
+  alienShotDirectionPhi.push(0);
   alienShotNum++;
 }
 
-function createAlienFireInterval(index) {
-  var m = setInterval( alienFire, ALIEN_FIRE_INTERVAL, index );
-  alienFireIntervals.push( m );
-}
-
-function alienFire(index) {
-  if(!alienShotInGame[index]) {
-    ALIEN_FIRE_SOUND.play();
-    alienShotInGame[index] = true;
-    alienShotPosX[index] = alienPosX[index];
-    alienShotPosY[index] = alienPosY[index];
-    alienShotPosZ[index] = alienPosZ[index] - 0.5;
-    /*yaw = arctan( (x2-x1) / (z2 - z1))
-    pitch = arctan( (z2-z1) / (y2 - y1))
-    roll = arctan( (y2-y1) / (x2 - x1))*/
-    alienShotDirY[index] = Math.atan( (xEye - alienPosX[index]) / (zEye - alienPosZ[index]) );
-    alienShotDirZ[index] = Math.atan( (zEye - alienPosZ[index]) / (yEye - alienPosY[index]) );
-    alienShotDirX[index] = Math.atan( (yEye - alienPosY[index]) / (xEye - alienPosX[index]) );
+function alienFire() {
+  for(var i = 0; i < alienShotInGame.length; i++) {
+    if(!alienShotInGame[i]) {
+      ALIEN_FIRE_SOUND.play();
+      alienShotInGame[i] = true;
+      alienShotPosX[i] = alienPosX[i];
+      alienShotPosY[i] = alienPosY[i];
+      alienShotPosZ[i] = alienPosZ[i];
+      alienShotDirectionPhi[i] = 2 * Math.random() * Math.PI;
+      alienShotDirectionTheta[i] = Math.random() * Math.PI;
+    }
   }
 }
 
@@ -368,9 +405,10 @@ function alienFire(index) {
 // itemIndex = 1: Draws shot
 // itemIndex = 2: Draws alien
 // itemIndex = 3: Draws alien shot
-function drawItem( x, y, z, size, mv, itemIndex ) {
+// itemIndex = 4: Draws background environment
+function drawItem( x, y, z, sizeX, sizeY, sizeZ, mv, itemIndex ) {
   mv = mult( mv, translate( x, y, z ) );
-  mv = mult( mv, scalem( size, size, size ) );
+  mv = mult( mv, scalem( sizeX, sizeY, sizeZ ) );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
@@ -397,7 +435,7 @@ function drawAsteroids( mv, t ) {
     astPosY[i] += (t * ymove);
     astPosZ[i] += (t * zmove);
     if(astAlive[i]) {
-      drawItem( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], mv, 0);
+      drawItem( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], asteroidSize[i], asteroidSize[i], mv, 0);
     }
   }
 }
@@ -414,7 +452,7 @@ function drawShots( mv, t ) {
     shotPosZ[i] += (10 * t * zmove);
 
     if(shotPosX[i] < BOUNDARY && shotPosX[i] > -BOUNDARY && shotPosY[i] < BOUNDARY && shotPosY[i] > -BOUNDARY && shotPosZ[i] < BOUNDARY && shotPosZ[i] > -BOUNDARY) {
-      drawItem( shotPosX[i], shotPosY[i], shotPosZ[i], SHOT_SIZE, mv, 1);
+      drawItem( shotPosX[i], shotPosY[i], shotPosZ[i], SHOT_SIZE, SHOT_SIZE, SHOT_SIZE, mv, 1);
     } else if(shotInGame[i] === true){
       shotInGame[i] = false;
       shotsAllowed++;
@@ -441,7 +479,7 @@ function drawAliens( mv, t ) {
     if(alienPosZ[i] < -BOUNDARY && zmove < 0) alienPosZ[i] += (2*BOUNDARY + 10);
 
     if(alienAlive[i]) {
-      drawItem( alienPosX[i], alienPosY[i], alienPosZ[i], ALIEN_SIZE, mv, 2);
+      drawItem( alienPosX[i], alienPosY[i], alienPosZ[i], ALIEN_SIZE, ALIEN_SIZE, ALIEN_SIZE / 3, mv, 2);
     }
   }
 }
@@ -449,16 +487,16 @@ function drawAliens( mv, t ) {
 function drawAlienShots( mv, t ) {
   for(var i = 0; i < alienShotNum; i++) {
 
-/*    var xmove = Math.sin(alienShotDirX[i])*Math.cos(alienShotDirY[i]);
-    var ymove = Math.sin(alienShotDirX[i])*Math.sin(alienShotDirY[i]);
-    var zmove = Math.cos(alienShotDirX[i]);*/
+    var xmove = Math.sin(alienShotDirectionTheta[i])*Math.cos(alienShotDirectionPhi[i]);
+    var ymove = Math.sin(alienShotDirectionTheta[i])*Math.sin(alienShotDirectionPhi[i]);
+    var zmove = Math.cos(alienShotDirectionTheta[i]);
 
-    alienShotPosX[i] += (t * alienShotDirX[i]);
-    alienShotPosY[i] += (t * alienShotDirY[i]);
-    alienShotPosZ[i] += (t * alienShotDirZ[i]);
+    alienShotPosX[i] += (1 * t * xmove);
+    alienShotPosY[i] += (1 * t * ymove);
+    alienShotPosZ[i] += (1 * t * zmove);
 
     if(alienShotPosX[i] < BOUNDARY && alienShotPosX[i] > -BOUNDARY && alienShotPosY[i] < BOUNDARY && alienShotPosY[i] > -BOUNDARY && alienShotPosZ[i] < BOUNDARY && alienShotPosZ[i] > -BOUNDARY) {
-      drawItem( alienShotPosX[i], alienShotPosY[i], alienShotPosZ[i], ALIEN_SHOT_SIZE, mv, 3);
+      drawItem( alienShotPosX[i], alienShotPosY[i], alienShotPosZ[i], ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, mv, 3);
     } else if(alienShotInGame[i] === true){
       alienShotInGame[i] = false;
     }
@@ -472,6 +510,8 @@ function drawScenery( mv ) {
   drawShots( mv, t );
   drawAliens( mv, t );
   drawAlienShots( mv, t );
+  // Draw environment
+  drawItem(0, 0, 0, 2*BOUNDARY+20, 2*BOUNDARY+20, 2*BOUNDARY+20, mv, 4);
 }
 
 function collisionDetection(){
@@ -528,45 +568,46 @@ function collisionDetection(){
           shotsAllowed++;
           shotInGame[i] = false, alienAlive[j] = false;
           score += 5; // 5 points for hitting alien-ship
-          clearInterval( alienFireIntervals[j] ); // stop alien-ship volley of fire
         }
       }
     }
   }
 
-  /* Game over if spaceship collides with an asteroid or with an alien-ship */
-  for(var i = 0; i < astNum; i++) {
+  /* Game over if spaceship collides with an asteroid */
+  for(var i = 0; i < astNum; i++)
     if(Math.abs(xEye - astPosX[i]) < asteroidSize[i] &&
        Math.abs(yEye - astPosY[i]) < asteroidSize[i] &&
-       Math.abs(zEye - astPosZ[i]) < asteroidSize[i] ) {
+       Math.abs(zEye - astPosZ[i]) < asteroidSize[i] )
       gameOver();
-    }
-  }
-  for(var i = 0; i < alienNum; i++) {
+
+  /* Game over if spaceship collides with an alien-ship */
+  for(var i = 0; i < alienNum; i++)
     if(Math.abs(xEye - alienPosX[i]) < ALIEN_SIZE &&
        Math.abs(yEye - alienPosY[i]) < ALIEN_SIZE &&
-       Math.abs(zEye - alienPosZ[i]) < ALIEN_SIZE ) {
+       Math.abs(zEye - alienPosZ[i]) < ALIEN_SIZE )
       gameOver();
-    }
-  }
 
   /* Game over if spaceship gets hit by an alien-ship */
-
+  for(var i = 0; i < alienShotNum; i++)
+    if(Math.abs(xEye - alienShotPosX[i]) < ALIEN_SHOT_SIZE &&
+       Math.abs(yEye - alienShotPosY[i]) < ALIEN_SHOT_SIZE &&
+       Math.abs(zEye - alienShotPosZ[i]) < ALIEN_SHOT_SIZE )
+      gameOver();
 }
 
+/* HANDLES GAME OVER EVENT */
 function gameOver() {
-  /* GAME OVER */
   ENGINE_SOUND.pause();
-  for(var i = 0; i < alienFireIntervals.length; i++) {
-    clearInterval(alienFireIntervals[i]);
-  }
+  clearInterval(alienFireInterval);
   clearInterval(alienCreationInterval);
+  clearInterval(asteroidCreationInterval);
   clearInterval(gameInterval);
   clearInterval(renderInterval);
   console.log("Game over");
   document.getElementById("score").innerHTML = "Game over! Your score: " + score;
 }
 
+/* HANDLES NEW GAME EVENT */
 function newGame() {
 
   score = 0;
@@ -588,11 +629,12 @@ function newGame() {
   alienDirectionTheta = [], alienDirectionPhi = [], alienAlive = [];
 
   alienshotPosX = [], alienshotPosY = [], alienshotPosZ = [];
-  alienShotDirX = [], alienShotDirY = [], alienShotInGame = [];
-  alienFireIntervals = [];
+  alienShotDirectionTheta = [], alienShotDirectionPhi = [], alienShotInGame = [];
   initializeAsteroids();
   initializeShots();
+  asteroidCreationInterval = setInterval(createRandomAsteroid, ASTEROID_APPEARANCE_INTERVAL);
   alienCreationInterval = setInterval(createAlien, ALIEN_APPEARANCE_INTERVAL);
+  alienFireInterval = setInterval(alienFire, ALIEN_FIRE_INTERVAL);
   gameInterval = setInterval(gameLoop, 10);
   renderInterval = setInterval(render, 10);
 }
@@ -605,9 +647,14 @@ function render() {
   document.getElementById("score").innerHTML = "Score: " + score;
 
   drawScenery( mv );
-  // requestAnimFrame( render );
 }
 
+// requestAnimFrame( render );
+/*
+function createAlienFireInterval(index) {
+  var m = setInterval( alienFire, ALIEN_FIRE_INTERVAL, index );
+  alienFireIntervals.push( m );
+}*/
 /*
 function configureTexture( image ) {
     texture = gl.createTexture();
