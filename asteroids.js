@@ -85,6 +85,7 @@ var zAt = RADIUS * Math.cos(theta);
 var xEye = 0, yEye = 0, zEye = 0;
 
 var score = 0;
+var scoretable = [];
 var movementDisabled = true;
 var points = [], colors = [];
 var mvLoc, pLoc, proj, vBuffer, vPosition, colorLoc;
@@ -264,7 +265,7 @@ function quad(a, b, c, d, col, type) {
 
 function initializeAsteroids() {
   for(var i = 0; i < INITIAL_ASTEROID_NUMBER; i++) {
-    var x = (Math.random()*200)-100, y = (Math.random()*200)-100, z = (Math.random()*200)-100;
+    var x = (Math.random()*2*BOUNDARY)-BOUNDARY, y = (Math.random()*2*BOUNDARY)-BOUNDARY, z = (Math.random()*2*BOUNDARY)-BOUNDARY;
     var phi = 2*Math.PI*Math.random(), theta = Math.PI*Math.random();
     createAsteroid(x, y, z, phi, theta, INITIAL_ASTEROID_SIZE);
   }
@@ -491,9 +492,9 @@ function drawAlienShots( mv, t ) {
     var ymove = Math.sin(alienShotDirectionTheta[i])*Math.sin(alienShotDirectionPhi[i]);
     var zmove = Math.cos(alienShotDirectionTheta[i]);
 
-    alienShotPosX[i] += (1 * t * xmove);
-    alienShotPosY[i] += (1 * t * ymove);
-    alienShotPosZ[i] += (1 * t * zmove);
+    alienShotPosX[i] += (2.5 * t * xmove);
+    alienShotPosY[i] += (2.5 * t * ymove);
+    alienShotPosZ[i] += (2.5 * t * zmove);
 
     if(alienShotPosX[i] < BOUNDARY && alienShotPosX[i] > -BOUNDARY && alienShotPosY[i] < BOUNDARY && alienShotPosY[i] > -BOUNDARY && alienShotPosZ[i] < BOUNDARY && alienShotPosZ[i] > -BOUNDARY) {
       drawItem( alienShotPosX[i], alienShotPosY[i], alienShotPosZ[i], ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, mv, 3);
@@ -597,14 +598,29 @@ function collisionDetection(){
 
 /* HANDLES GAME OVER EVENT */
 function gameOver() {
+  scoretable.push(score);
+  var myNode = document.querySelector(".scoretable");
+  while (myNode.firstChild) {
+    myNode.removeChild(myNode.firstChild);
+  }
+  scoretable.sort();
+  for(var i = scoretable.length - 1; i >= 0; --i) {
+    var tr = document.createElement("tr");
+    var td1 = document.createElement("td");
+    var td2 = document.createElement("td");
+    td1.innerHTML = scoretable.length - i;
+    td2.innerHTML = scoretable[i];
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    myNode.appendChild(tr);
+  }
   ENGINE_SOUND.pause();
   clearInterval(alienFireInterval);
   clearInterval(alienCreationInterval);
   clearInterval(asteroidCreationInterval);
   clearInterval(gameInterval);
   clearInterval(renderInterval);
-  console.log("Game over");
-  document.getElementById("score").innerHTML = "Game over! Your score: " + score;
+  document.getElementById("score").innerHTML = "Leik lokið! Þú fékkst " + score + " stig.";
 }
 
 /* HANDLES NEW GAME EVENT */
@@ -643,25 +659,8 @@ function render() {
 
   gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   var mv = lookAt( vec3(xEye, yEye, zEye), vec3(xAt, yAt, zAt), vec3(0.0, 0.0, 1.0) );
-  document.getElementById("coordinates").innerHTML = "Coordinates: ( " + Math.round(xEye, 0) + ", " + Math.round(yEye, 0) + ", " + Math.round(zEye, 0) + ")";
-  document.getElementById("score").innerHTML = "Score: " + score;
+  document.getElementById("coordinates").innerHTML = "Hnit: ( " + Math.round(xEye, 0) + ", " + Math.round(yEye, 0) + ", " + Math.round(zEye, 0) + ")";
+  document.getElementById("score").innerHTML = "Stig: " + score;
 
   drawScenery( mv );
 }
-
-// requestAnimFrame( render );
-/*
-function createAlienFireInterval(index) {
-  var m = setInterval( alienFire, ALIEN_FIRE_INTERVAL, index );
-  alienFireIntervals.push( m );
-}*/
-/*
-function configureTexture( image ) {
-    texture = gl.createTexture();
-    gl.bindTexture( gl.TEXTURE_2D, texture );
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
-    gl.generateMipmap( gl.TEXTURE_2D );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-}*/

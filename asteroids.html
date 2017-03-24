@@ -36,25 +36,43 @@
     <script type="text/javascript" src="asteroids.js"></script>
   </head>
   <body style="text-align: center">
-    <canvas style="margin: auto; display: block;" id="gl-canvas" width="512" height="512">
-      Oops ... your browser doesn't support the HTML5 canvas element
-    </canvas>
+    <div style="display: flex; flex-direction: row; justify-content: center;">
+      <div>
+        <canvas style="margin: auto; display: block; " id="gl-canvas" width="512" height="512">
+          Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+        <br></br>
+        <p>Þetta er Smástirni 3D</p>
+        <p>Höfundar: Bjarki Viðar Kristjánsson &#38; Valentin Oliver Loftsson, mars 2017.</p>
+        <form style="display: flex; justify-content: center;">
+          <div style="margin: 0 10px">
+            <label for="new-game">
+            <button id="new-game">Spila aftur</button>
+          </div>
+          <div style="margin: 0 10px">
+            <p id = "score"></p>
+          </div>
+          <div style="margin: 0 10px">
+            <p id = "coordinates"></p>
+          </div>
+        </form>
+        <p style="margin: 0 10em">Þú ert í geimskipi og þarft að forða þér frá því að rekast á smástirni og loftsteina. Það getur þú gert með því að skjóta á steinana (SPACE) eða með því að kveikja á þotuhreyflinum (CTRL). Notaðu örvatakkana til að skipta um sjónarhorn. Einnig þarftu að passa þig á fljúgandi marglitum diskum sem geimverur stjórna. Þú færð 1 stig fyrir að hitta stóran loftstein, 2 stig fyrir miðstóran og 3 stig fyrir að hitta lítinn. Þú færð 5 stig fyrir að hitta fljúgandi disk.</p>
+        <br></br>
+      </div>
+      <div style="margin-right: 10em; margin-top: 5em">
+        <h1>Stigatafla</h1>
+        <table class="table table-hover" border="1">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Stig</th>
+            </tr>
+          </thead>
+          <tbody class="table-striped scoretable">
+          </tbody>
+        </table>
+      </div>
+    </div>
     <img id = "texImage" src = "stars.jpg" hidden></img>
-    <br>
-    <p>Welcome to Asteroids 3D</p>
-    <p>Created by: Bjarki Viðar Kristjánsson &#38; Valentin Oliver Loftsson, March 2017.</p>
-    <form class="form-inline">
-      <div style="margin: 0 10px" class="form-group">
-        <label for="new-game">
-        <button id="new-game">New Game</button>
-      </div>
-      <div style="margin: 0 10px" class="form-group">
-        <p id = "score"></p>
-      </div>
-      <div style="margin: 0 10px" class="form-group">
-        <p id = "coordinates"></p>
-      </div>
-    </form>
-    <br>
   </body>
 </html>
