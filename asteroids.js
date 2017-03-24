@@ -379,9 +379,9 @@ function createAlien() {
 
 function createAlienShot() {
   alienShotInGame.push(true);
-  alienShotPosX.push(0);
-  alienShotPosY.push(0);
-  alienShotPosZ.push(0);
+  alienShotPosX.push(-2*BOUNDARY);
+  alienShotPosY.push(-2*BOUNDARY);
+  alienShotPosZ.push(-2*BOUNDARY);
   alienShotDirectionTheta.push(0);
   alienShotDirectionPhi.push(0);
   alienShotNum++;
