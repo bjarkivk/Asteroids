@@ -603,6 +603,7 @@ function gameOver() {
   while (myNode.firstChild) {
     myNode.removeChild(myNode.firstChild);
   }
+  console.log("game over");
   scoretable.sort();
   for(var i = scoretable.length - 1; i >= 0; --i) {
     var tr = document.createElement("tr");
