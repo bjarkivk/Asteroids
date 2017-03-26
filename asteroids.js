@@ -390,8 +390,8 @@ function createAlienShot() {
 
 function alienFire() {
   for(var i = 0; i < alienShotInGame.length; i++) {
-    if(!alienShotInGame[i]) {
-      ALIEN_FIRE_SOUND.play();
+    ALIEN_FIRE_SOUND.play();
+    if(!alienShotInGame[i]) {      
       alienShotInGame[i] = true;
       alienShotPosX[i] = alienPosX[i];
       alienShotPosY[i] = alienPosY[i];
