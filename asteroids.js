@@ -75,7 +75,7 @@ var MAX_SPEED = 2;
 var FRICTION = 0.98;
 var RADIUS = 1000000;
 var TOTAL_SHOTS = 4;
-var BOUNDARY = 220;
+var BOUNDARY = 150;
 
 var theta = (Math.PI / 2);
 var phi = 0;
@@ -432,9 +432,9 @@ function drawAsteroids( mv, t ) {
     if(astPosZ[i] > BOUNDARY && zmove > 0) astPosZ[i] -= (2*BOUNDARY + 10);
     if(astPosZ[i] < -BOUNDARY && zmove < 0) astPosZ[i] += (2*BOUNDARY + 10);
 
-    astPosX[i] += (t * xmove);
-    astPosY[i] += (t * ymove);
-    astPosZ[i] += (t * zmove);
+    astPosX[i] += (2 * t * xmove);
+    astPosY[i] += (2 * t * ymove);
+    astPosZ[i] += (2 * t * zmove);
     if(astAlive[i]) {
       drawItem( astPosX[i], astPosY[i], astPosZ[i], asteroidSize[i], asteroidSize[i], asteroidSize[i], mv, 0);
     }
@@ -448,9 +448,9 @@ function drawShots( mv, t ) {
     var ymove = Math.sin(shotDirectionTheta[i])*Math.sin(shotDirectionPhi[i]);
     var zmove = Math.cos(shotDirectionTheta[i]);
 
-    shotPosX[i] += (10 * t * xmove);
-    shotPosY[i] += (10 * t * ymove);
-    shotPosZ[i] += (10 * t * zmove);
+    shotPosX[i] += (15 * t * xmove);
+    shotPosY[i] += (15 * t * ymove);
+    shotPosZ[i] += (15 * t * zmove);
 
     if(shotPosX[i] < BOUNDARY && shotPosX[i] > -BOUNDARY && shotPosY[i] < BOUNDARY && shotPosY[i] > -BOUNDARY && shotPosZ[i] < BOUNDARY && shotPosZ[i] > -BOUNDARY) {
       drawItem( shotPosX[i], shotPosY[i], shotPosZ[i], SHOT_SIZE, SHOT_SIZE, SHOT_SIZE, mv, 1);
@@ -468,9 +468,9 @@ function drawAliens( mv, t ) {
     var ymove = Math.sin(alienDirectionTheta[i])*Math.sin(alienDirectionPhi[i]);
     var zmove = Math.cos(alienDirectionTheta[i]);
 
-    alienPosX[i] += (t * xmove);
-    alienPosY[i] += (t * ymove);
-    alienPosZ[i] += (t * zmove);
+    alienPosX[i] += (1.5 * t * xmove);
+    alienPosY[i] += (1.5 * t * ymove);
+    alienPosZ[i] += (1.5 * t * zmove);
 
     if(alienPosX[i] > BOUNDARY && xmove > 0) alienPosX[i] -= (2*BOUNDARY + 10);
     if(alienPosX[i] < -BOUNDARY && xmove < 0) alienPosX[i] += (2*BOUNDARY + 10);
@@ -492,9 +492,9 @@ function drawAlienShots( mv, t ) {
     var ymove = Math.sin(alienShotDirectionTheta[i])*Math.sin(alienShotDirectionPhi[i]);
     var zmove = Math.cos(alienShotDirectionTheta[i]);
 
-    alienShotPosX[i] += (2.5 * t * xmove);
-    alienShotPosY[i] += (2.5 * t * ymove);
-    alienShotPosZ[i] += (2.5 * t * zmove);
+    alienShotPosX[i] += (3.5 * t * xmove);
+    alienShotPosY[i] += (3.5 * t * ymove);
+    alienShotPosZ[i] += (3.5 * t * zmove);
 
     if(alienShotPosX[i] < BOUNDARY && alienShotPosX[i] > -BOUNDARY && alienShotPosY[i] < BOUNDARY && alienShotPosY[i] > -BOUNDARY && alienShotPosZ[i] < BOUNDARY && alienShotPosZ[i] > -BOUNDARY) {
       drawItem( alienShotPosX[i], alienShotPosY[i], alienShotPosZ[i], ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, ALIEN_SHOT_SIZE, mv, 3);
@@ -601,16 +601,23 @@ function gameOver() {
   scoretable.push(score);
   var myNode = document.querySelector(".scoretable");
   while (myNode.firstChild) {
+    console.log("removed");
     myNode.removeChild(myNode.firstChild);
   }
   console.log("game over");
-  scoretable.sort();
+  scoretable.sort(function compare(a, b) {
+    if (a < b) return -1;
+    else if (a > b) return 1;
+    return 0;
+  });
+  console.log(scoretable);
   for(var i = scoretable.length - 1; i >= 0; --i) {
     var tr = document.createElement("tr");
     var td1 = document.createElement("td");
     var td2 = document.createElement("td");
     td1.innerHTML = scoretable.length - i;
     td2.innerHTML = scoretable[i];
+    console.log(td1.innerHTML + " " + td2.innerHTML);
     tr.appendChild(td1);
     tr.appendChild(td2);
     myNode.appendChild(tr);
